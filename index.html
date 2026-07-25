@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>Gisella Gonzalez — AI Integration Specialist</title>
+    <meta
+      name="description"
+      content="Gisella Gonzalez builds agentic AI systems end to end — LLM reasoning, RAG pipelines and enterprise integration. The assistant on this page operates the site itself."
+    />
+    <meta name="author" content="Gisella Gonzalez" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Gisella Gonzalez — AI Integration Specialist" />
+    <meta
+      property="og:description"
+      content="Agentic systems, LLM and Oracle integrations. The assistant on this page operates the site itself."
+    />
+    <!-- Regenerate with `python scripts/make-og.py` after changing the domain,
+         the photo or the title. Dimensions are declared so scrapers can lay the
+         card out without fetching the image first. -->
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Gisella Gonzalez — AI Integration Specialist" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_AR" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Applies the stored theme before first paint, so a returning visitor
+         who chose light never sees a dark flash. Kept inline and tiny; the
+         store takes over from here. -->
+    <script>
+      try {
+        var saved = JSON.parse(localStorage.getItem('gk-portfolio-ui') || '{}')
+        var root = document.documentElement
+        root.dataset.theme =
+          saved.theme ||
+          (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+        root.dataset.accent = saved.accent || 'orange'
+        if (saved.effects === false) root.dataset.fx = 'off'
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

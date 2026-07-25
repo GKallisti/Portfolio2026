@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="G.Kallisti">
+  <!--
+    A pixel "G": the arcade streak, at the one size where a wordmark would be
+    unreadable. Every edge sits on a 4px grid so strokes land on whole pixels
+    at 16px and 32px instead of blurring.
+
+    The dark plate is baked in rather than left transparent — a transparent
+    favicon takes on the browser's tab colour, and the orange loses most of
+    its contrast against a light one.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0A0C10"/>
+  <g fill="#FF9200">
+    <rect x="6" y="4" width="4" height="24"/>   <!-- left stroke        -->
+    <rect x="10" y="4" width="16" height="4"/>  <!-- top bar            -->
+    <rect x="10" y="24" width="16" height="4"/> <!-- bottom bar         -->
+    <rect x="22" y="16" width="4" height="8"/>  <!-- right stroke, low  -->
+    <rect x="16" y="16" width="6" height="4"/>  <!-- inward tick        -->
+  </g>
+</svg>

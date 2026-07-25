@@ -1,0 +1,212 @@
+/* These emit Cyrillic/Greek/Vietnamese subsets into the build as well as
+   Latin, but every @font-face carries a unicode-range, so a browser only
+   fetches the subsets the page's characters actually need. Extra files on
+   disk, not extra bytes over the wire. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource/press-start-2p';
+
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Every foreground/background pair below was checked against WCAG 2.1 AA
+   (4.5:1 for body text, 3:1 for interactive borders) in both themes and for
+   all five accents. If you change a colour, re-check it — the old portfolio
+   shipped pure red on orange, which is why this is written down.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* Dark is the default theme. */
+  --c-bg: #0a0c10;
+  --c-surface: #12161b;
+  --c-raised: #1a1f27;
+  --c-border: #262d38;
+  --c-border-interactive: #566476;
+  --c-text: #e8edf2;
+  --c-muted: #9aa7b8;
+  --c-on-accent: #0a0c10;
+
+  /* Accent defaults to orange; [data-accent] overrides it below.
+     #FF9200 is the accent from the previous portfolio — the one colour worth
+     keeping from it, now paired with backgrounds that pass contrast. */
+  --c-accent: #ff9200;
+
+  /* CRT flourish strength. Set to 0 to disable. */
+  --fx-scanline: 0.035;
+  --fx-glow: 0.5;
+
+  /* The hero grid gets its own colour rather than borrowing --c-border:
+     the border tone is tuned to sit quietly against surfaces, which on the
+     dark background left the grid at 1.1:1 — there, but not visibly. This
+     lands around 2.5:1: clearly a grid, still background. */
+  --fx-grid-color: #455365;
+}
+
+[data-theme='light'] {
+  --c-bg: #fbfbf9;
+  --c-surface: #ffffff;
+  --c-raised: #f2f3f0;
+  --c-border: #e2e4e0;
+  --c-border-interactive: #7a8493;
+  --c-text: #14171c;
+  --c-muted: #5a6472;
+  --c-on-accent: #ffffff;
+  --c-accent: #a34700;
+
+  /* The CRT flourish reads as dirt on a light background — dial it back. */
+  --fx-scanline: 0;
+  --fx-glow: 0.25;
+  --fx-grid-color: #ced1cb;
+}
+
+/* Accent variants, deliberately warm — the agent switches these via
+   `setAccent`. Each value is checked against the text, background and raised
+   surfaces of its own theme; see the audit note at the top of this file. */
+[data-accent='orange'] { --c-accent: #ff9200; }
+[data-accent='amber'] { --c-accent: #ffb347; }
+[data-accent='coral'] { --c-accent: #ff9478; }
+[data-accent='magenta'] { --c-accent: #ff8ad8; }
+[data-accent='violet'] { --c-accent: #b49cff; }
+
+[data-theme='light'][data-accent='orange'] { --c-accent: #a34700; }
+[data-theme='light'][data-accent='amber'] { --c-accent: #7a4800; }
+[data-theme='light'][data-accent='coral'] { --c-accent: #a82f1a; }
+[data-theme='light'][data-accent='magenta'] { --c-accent: #a31b78; }
+[data-theme='light'][data-accent='violet'] { --c-accent: #5b3fd1; }
+
+/* Kill the CRT flourish entirely when the visitor asks for less motion,
+   or when the agent turns it off. */
+[data-fx='off'] {
+  --fx-scanline: 0;
+  --fx-glow: 0;
+}
+
+/* Suppress transitions for the frame in which the theme flips.
+   A CSS transition on a colour that resolves through a custom property does
+   not re-target when that variable changes — the element stays stuck on the
+   previous theme's colour indefinitely. Every `transition-colors` button and
+   card hit this. Killing transitions during the swap avoids it, and removes
+   the cross-fade smear that made the switch look sloppy anyway. */
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+/* `inline` is required for runtime theming, and is not a stylistic choice.
+   Without it Tailwind emits an intermediate `--color-*: var(--c-*)` layer on
+   :root; descendants inherit that layer's *computed* value, so flipping
+   [data-theme] repaints the body but leaves every `bg-surface` card frozen on
+   the old palette. `inline` drops the middle layer and points utilities
+   straight at --c-*, which does update. */
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-raised: var(--c-raised);
+  --color-border: var(--c-border);
+  --color-border-interactive: var(--c-border-interactive);
+  --color-text: var(--c-text);
+  --color-muted: var(--c-muted);
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+
+  --font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --font-pixel: 'Press Start 2P', 'Space Grotesk Variable', monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Sections are scrolled to by the agent; keep headings clear of the nav. */
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* A visible, high-contrast focus ring everywhere. The old portfolio used
+     `outline-none` on every input with nothing in its place. */
+  :focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--c-accent);
+    color: var(--c-on-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* The gaming flourish, kept to a texture rather than a theme: a faint
+     scanline wash that sits above the background and below the content. */
+  .fx-scanlines::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--c-text) calc(var(--fx-scanline) * 100%), transparent) 0px,
+      color-mix(in srgb, var(--c-text) calc(var(--fx-scanline) * 100%), transparent) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+
+  .fx-grid {
+    background-image:
+      linear-gradient(to right, var(--fx-grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--fx-grid-color) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .text-pixel {
+    font-family: var(--font-pixel);
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 calc(var(--fx-glow) * 40px)
+      color-mix(in srgb, var(--c-accent) 25%, transparent);
+  }
+}
