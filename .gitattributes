@@ -1,0 +1,17 @@
+# Normalise line endings so a clone on Linux/macOS — or a CI checkout — does
+# not show every file as fully modified. Text is stored as LF in the repo and
+# checked out however the local platform prefers.
+* text=auto eol=lf
+
+# Binary assets: never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ico binary
+
+# Generated — collapse it in diffs and exclude it from language stats.
+package-lock.json linguist-generated=true -diff
