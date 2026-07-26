@@ -34,10 +34,29 @@
     }
   ],
 
+  // Per-IP rate limiting on the agent endpoint. Cloudflare's built-in
+  // limiter: the counter lives in the edge runtime, so there is no namespace
+  // to create, no binding to wire up in the dashboard, and no billable reads
+  // or writes. Nothing here can be left half-configured.
+  //
+  // namespace_id is just a label scoping this counter within the Worker - any
+  // stable number does, it is not an account resource. `period` only accepts
+  // 10 or 60 seconds.
+  //
+  // 8 per minute is roughly one message every seven seconds: unnoticeable to
+  // someone reading the page, and enough to make scripted abuse pointless.
+  "ratelimits": [
+    {
+      "name": "AGENT_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 8, "period": 60 }
+    }
+  ],
+
   "observability": {
     "enabled": true
   }
 
-  // RATE_LIMIT (the KV namespace) is deliberately not declared: add it in the
-  // dashboard, or list it here with its id once the namespace exists.
+  // RATE_LIMIT (a KV namespace) is the fallback path in the code and is
+  // deliberately not declared - the native limiter above covers this.
 }

@@ -93,10 +93,17 @@ const KNOWLEDGE_BASE: Record<Language, string> = {
  */
 type SecretValue = string | { get(): Promise<string> }
 
+/** Cloudflare's native rate limiter binding. */
+interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>
+}
+
 export interface Env {
   OPENAI_API_KEY?: SecretValue
   AGENT_MODEL?: string
-  /** Optional KV namespace for rate limiting. Absent in local dev. */
+  /** Native per-IP limiter, declared in wrangler.jsonc. */
+  AGENT_LIMITER?: RateLimiter
+  /** Optional KV fallback, only used where the native limiter is absent. */
   RATE_LIMIT?: KVNamespace
   /** Static site in `dist/`, bound by wrangler.jsonc. */
   ASSETS: Fetcher
@@ -117,7 +124,10 @@ async function readSecret(value: SecretValue | undefined): Promise<string | unde
   return undefined
 }
 
-/** Visitors get a small budget per window; enough to play, not to farm. */
+/**
+ * Fallback budget, used only on the KV path. The primary limiter is
+ * Cloudflare's native one, whose numbers live in wrangler.jsonc.
+ */
 const RATE_LIMIT_MAX_REQUESTS = 12
 const RATE_LIMIT_WINDOW_SECONDS = 300
 
@@ -173,9 +183,24 @@ function json(body: unknown, status = 200): Response {
  * unavailable, a visitor gets through rather than seeing a broken agent.
  */
 async function isRateLimited(env: Env, request: Request): Promise<boolean> {
+  const ip = request.headers.get('cf-connecting-ip') ?? 'unknown'
+
+  // Cloudflare's built-in limiter. Preferred because it needs no namespace to
+  // provision and no billable reads or writes — the counter lives in the edge
+  // runtime — so it is the one path that cannot be left half-configured.
+  if (env.AGENT_LIMITER) {
+    try {
+      const { success } = await env.AGENT_LIMITER.limit({ key: ip })
+      return !success
+    } catch {
+      // Fall through to KV rather than failing the request: a limiter that
+      // errors should not take the agent down with it.
+    }
+  }
+
+  // Fallback for a Worker where the native limiter is unavailable.
   if (!env.RATE_LIMIT) return false
 
-  const ip = request.headers.get('cf-connecting-ip') ?? 'unknown'
   const window = Math.floor(Date.now() / 1000 / RATE_LIMIT_WINDOW_SECONDS)
   const key = `rl:${ip}:${window}`
 
@@ -188,6 +213,8 @@ async function isRateLimited(env: Env, request: Request): Promise<boolean> {
     })
     return false
   } catch {
+    // Failing open is deliberate: a rate limiter that cannot read its own
+    // state should degrade to "no limit", not to "site broken".
     return false
   }
 }

@@ -134,25 +134,39 @@ ya viene activada desde `wrangler.jsonc`.
 
 ---
 
-## 4. Rate limiting (opcional pero recomendado)
+## 4. Rate limiting
 
-Sin esto, cualquiera puede mandarle mensajes al asistente todo el día y lo
-pagás vos. Con esto, cada IP tiene 12 mensajes cada 5 minutos.
+**Ya está configurado, no tenés que hacer nada.**
 
-1. **Workers & Pages** → **KV** → **Create a namespace**
-2. Nombre: `portfolio-rate-limit` → **Add**
-3. Volvé a tu Worker → **Settings** → **Bindings** → **Add** →
-   **KV namespace**
+Cada IP puede mandar 8 mensajes por minuto al asistente. Alcanza de sobra para
+alguien que está leyendo la página y hace que no tenga sentido automatizar
+pedidos contra tu cuenta de OpenAI.
 
-   | Campo | Valor |
-   |---|---|
-   | Variable name | `RATE_LIMIT` |
-   | KV namespace | `portfolio-rate-limit` |
+Usa el limitador nativo de Workers, declarado en `wrangler.jsonc`:
 
-4. **Save** y volvé a hacer **Retry deployment**
+```jsonc
+"ratelimits": [
+  { "name": "AGENT_LIMITER", "namespace_id": "1001",
+    "simple": { "limit": 8, "period": 60 } }
+]
+```
 
-El nombre de la variable tiene que ser exactamente `RATE_LIMIT`. Si no
-coincide, el Worker no lo encuentra y simplemente no limita nada (no rompe).
+El contador vive en el runtime del edge, así que no hay namespace que crear ni
+binding que conectar en el panel, y no genera lecturas ni escrituras
+facturables. `period` sólo acepta 10 o 60 segundos.
+
+Para cambiar el límite, editá `limit` y pusheá.
+
+### Probarlo sin gastar tokens
+
+El límite se chequea **antes** de validar el cuerpo del mensaje, así que podés
+dispararlo con pedidos vacíos que nunca llegan a OpenAI:
+
+```powershell
+1..10 | ForEach-Object { curl.exe -s -o NUL -w "%{http_code}`n" -X POST https://TU-DOMINIO/api/agent -H "content-type: application/json" -d "{}" }
+```
+
+Deberías ver varios `400` y después `429`.
 
 ---
 
