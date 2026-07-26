@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { buildToolDefinitions, describeUIState, uiStateSchema } from '../src/agent/catalog'
 import { projects } from '../src/content/projects'
 import { credentials, education, experience, profile } from '../src/content/profile'
+import type { Language } from '../src/content/types'
 
 /**
  * The facts, rendered from the same content the page renders.
@@ -12,9 +13,9 @@ import { credentials, education, experience, profile } from '../src/content/prof
  * `src/content` rather than restating it here means the agent cannot drift
  * from the site: change the copy, and what it knows changes with it.
  */
-function buildKnowledgeBase(): string {
+function buildKnowledgeBase(lang: Language): string {
   const projectLines = projects.map((p) => {
-    const name = typeof p.name === 'string' ? p.name : p.name.en
+    const name = typeof p.name === 'string' ? p.name : p.name[lang]
     const links = [
       p.href && `site: ${p.href}`,
       p.download && `download: ${p.download}`,
@@ -24,16 +25,16 @@ function buildKnowledgeBase(): string {
     return [
       `### ${name}${p.secret ? '  [HIDDEN - see the hidden project rules]' : ''}`,
       `Status: ${p.status} (${p.year}). Stack: ${p.stack.join(', ')}.`,
-      p.tagline.en,
-      p.detail.en,
-      links && `Links — ${links}.`,
-      p.confidentialNote && `NOTE: ${p.confidentialNote.en}`,
+      p.tagline[lang],
+      p.detail[lang],
+      links && `Links: ${links}.`,
+      p.confidentialNote && `NOTE: ${p.confidentialNote[lang]}`,
     ].filter(Boolean).join('\n')
   })
 
   const experienceLines = experience.map((e) => {
-    const company = typeof e.company === 'string' ? e.company : e.company.en
-    return `### ${e.role.en} — ${company} (${e.period.en})\n${e.highlights.en.join(' ')}`
+    const company = typeof e.company === 'string' ? e.company : e.company[lang]
+    return `### ${e.role[lang]} - ${company} (${e.period[lang]})\n${e.highlights[lang].join(' ')}`
   })
 
   return [
@@ -50,15 +51,24 @@ function buildKnowledgeBase(): string {
     '',
     '## EDUCATION',
     education
-      .map((e) => `- ${e.degree.en}, ${e.institution} (${e.period.en})`)
+      .map((e) => `- ${e.degree[lang]}, ${e.institution} (${e.period[lang]})`)
       .join('\n'),
     '',
     '## CONTACT',
-    `Email ${profile.email}. GitHub ${profile.github}. LinkedIn ${profile.linkedin}. Based in ${profile.location.en}.`,
+    `Email ${profile.email}. GitHub ${profile.github}. LinkedIn ${profile.linkedin}. Based in ${profile.location[lang]}.`,
   ].join('\n')
 }
 
-const KNOWLEDGE_BASE = buildKnowledgeBase()
+/**
+ * Built once per language rather than per request, and served in the language
+ * the visitor is reading. Handing the model the English copy and letting it
+ * translate produced wording Gisella had explicitly rejected ("motera" for
+ * "motociclista") — giving it her own sentences removes the guesswork.
+ */
+const KNOWLEDGE_BASE: Record<Language, string> = {
+  en: buildKnowledgeBase('en'),
+  es: buildKnowledgeBase('es'),
+}
 
 /**
  * The agent endpoint, served by the Worker in `worker/index.ts`.
@@ -293,7 +303,7 @@ export async function handleAgentRequest(request: Request, env: Env): Promise<Re
 Generated from the same content the page displays. This is the whole of it:
 anything not here, you do not know.
 
-${KNOWLEDGE_BASE}
+${KNOWLEDGE_BASE[parsedState.data.language]}
 
 # CURRENT PAGE STATE
 ${describeUIState(parsedState.data)}
