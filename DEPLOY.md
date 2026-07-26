@@ -1,4 +1,4 @@
-# Desplegar en Cloudflare Pages
+# Desplegar en Cloudflare
 
 Guía paso a paso, pensada para hacerse una sola vez.
 
@@ -6,7 +6,7 @@ Guía paso a paso, pensada para hacerse una sola vez.
 
 ## 1. Subir el proyecto a GitHub
 
-Cloudflare Pages se conecta a un repositorio. Si `portfolio-v2/` todavía no
+Cloudflare se conecta a un repositorio. Si `portfolio-v2/` todavía no
 está en GitHub, creá un repo y subilo. Confirmá antes que `.gitignore` esté
 haciendo su trabajo:
 
@@ -22,22 +22,37 @@ historial de git no se borra con un commit posterior.
 
 ## 2. Crear el proyecto en Cloudflare
 
+Cloudflare unificó Pages dentro de Workers: los proyectos nuevos se despliegan
+como **Worker con assets estáticos** y quedan en `*.workers.dev`. Este proyecto
+está configurado para eso — `wrangler.jsonc` en la raíz define el Worker
+(`worker/index.ts`) y el directorio de assets (`dist`).
+
 1. Entrá a **dash.cloudflare.com** → menú lateral **Workers & Pages**
-2. **Create** → pestaña **Pages** → **Connect to Git**
-3. Autorizá GitHub y elegí el repositorio
-4. En la pantalla de configuración de build:
+2. **Create** → **Import a repository** → elegí el repo
+3. En la configuración de build:
 
    | Campo | Valor |
    |---|---|
-   | Framework preset | `None` (o Vite, da igual) |
    | Build command | `npm run build` |
-   | Build output directory | `dist` |
-   | Root directory | `portfolio-v2` — **sólo si** el repo tiene el proyecto en un subdirectorio |
+   | Deploy command | `npx wrangler deploy` |
+   | Root directory | vacío (el repo *es* el proyecto) |
 
-5. **Save and Deploy**
+4. **Create and deploy**
 
 El primer deploy va a funcionar, pero el asistente va a estar en modo local
 hasta que agregues la key en el paso siguiente. Eso es esperable.
+
+> **Cómo saber si el Worker está corriendo de verdad.** Si el sitio carga pero
+> el asistente siempre responde *"El modelo no está disponible"*, probá:
+>
+> ```bash
+> curl -X POST https://TU-DOMINIO/api/agent -H "content-type: application/json" -d "{}"
+> ```
+>
+> Un **400** significa que el Worker corre (rechazó el body vacío, que es lo
+> correcto). Un **405** significa que se está sirviendo el sitio como assets
+> estáticos y el Worker no se está ejecutando: revisá que `wrangler.jsonc` esté
+> en la raíz del repo y que el deploy command sea `npx wrangler deploy`.
 
 ---
 
@@ -46,11 +61,8 @@ hasta que agregues la key en el paso siguiente. Eso es esperable.
 La key va como **secret**, no como variable normal: un secret queda oculto
 después de guardarlo y no se puede volver a leer desde el panel.
 
-1. En tu proyecto de Pages: **Settings** → **Variables and secrets**
-2. Asegurate de estar en el entorno **Production** (hay un selector
-   Production / Preview; conviene agregarla en los dos si querés que las
-   ramas de preview también tengan agente)
-3. **Add** →
+1. En tu Worker: **Settings** → **Variables and secrets**
+2. **Add** →
 
    | Campo | Valor |
    |---|---|
@@ -58,25 +70,27 @@ después de guardarlo y no se puede volver a leer desde el panel.
    | Variable name | `OPENAI_API_KEY` |
    | Value | tu key, la que empieza con `sk-` |
 
-4. **Save**
-5. Opcional, en el mismo lugar, como **Text** (no secret):
+3. **Save**
+4. Opcional, en el mismo lugar, como **Text** (no secret):
 
    | Variable name | Value |
    |---|---|
    | `AGENT_MODEL` | el id de modelo que quieras usar |
 
-> ⚠️ **Un secret nuevo no se aplica solo.** Después de guardarlo tenés que ir a
-> **Deployments** → el último deploy → **Retry deployment**. Si no, la función
-> sigue corriendo sin la key y el agente queda en modo local sin avisarte.
+> ⚠️ **Un secret nuevo no se aplica solo.** Después de guardarlo hay que
+> redeployar: **Deployments** → el último → **Retry deployment**, o pushear
+> cualquier commit. Si no, el Worker sigue corriendo sin la key y el agente
+> queda en modo local sin avisarte.
 
 ### Verificar que quedó bien
 
 Abrí el sitio, abrí el asistente y escribí cualquier cosa. Si la respuesta
 **no** dice *"El modelo no está disponible ahora…"*, la key está funcionando.
 
-Si sigue en modo local, mirá los logs: **Workers & Pages** → tu proyecto →
+Si sigue en modo local, mirá los logs: **Workers & Pages** → tu Worker →
 **Logs** → **Begin log stream**, y mandá otro mensaje. Vas a ver el error real
-(lo más común es un id de modelo que tu cuenta no puede usar).
+(lo más común es un id de modelo que tu cuenta no puede usar). La observabilidad
+ya viene activada desde `wrangler.jsonc`.
 
 ---
 
@@ -87,7 +101,7 @@ pagás vos. Con esto, cada IP tiene 12 mensajes cada 5 minutos.
 
 1. **Workers & Pages** → **KV** → **Create a namespace**
 2. Nombre: `portfolio-rate-limit` → **Add**
-3. Volvé a tu proyecto de Pages → **Settings** → **Bindings** → **Add** →
+3. Volvé a tu Worker → **Settings** → **Bindings** → **Add** →
    **KV namespace**
 
    | Campo | Valor |
@@ -98,7 +112,7 @@ pagás vos. Con esto, cada IP tiene 12 mensajes cada 5 minutos.
 4. **Save** y volvé a hacer **Retry deployment**
 
 El nombre de la variable tiene que ser exactamente `RATE_LIMIT`. Si no
-coincide, la función no lo encuentra y simplemente no limita nada (no rompe).
+coincide, el Worker no lo encuentra y simplemente no limita nada (no rompe).
 
 ---
 
@@ -110,8 +124,8 @@ coincide, la función no lo encuentra y simplemente no limita nada (no rompe).
    el dominio y reemplazá los nameservers por esos dos.
    - En NIC.ar: *Mis dominios* → el dominio → *Delegaciones* → editar
 4. La propagación tarda entre unos minutos y 24 horas
-5. Cuando Cloudflare marque el dominio como **Active**: volvé a tu proyecto de
-   Pages → **Custom domains** → **Set up a domain** → escribí el dominio
+5. Cuando Cloudflare marque el dominio como **Active**: volvé a tu Worker →
+   **Settings** → **Domains & Routes** → **Add** → **Custom domain**
 
 El certificado HTTPS lo emite Cloudflare solo, no hay que hacer nada.
 
@@ -138,8 +152,8 @@ puede quedarse con esa versión un buen rato.
 
 ## Costos
 
-- **Cloudflare Pages**: gratis para este tráfico (500 builds/mes, requests
-  ilimitados en el plan free)
+- **Cloudflare Workers**: gratis para este tráfico (100.000 requests por día
+  en el plan free)
 - **KV**: gratis hasta 100.000 lecturas por día
 - **OpenAI**: es lo único que se paga, y sólo cuando alguien usa el asistente.
   El rate limiting del paso 4 es lo que evita sorpresas.

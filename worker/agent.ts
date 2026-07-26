@@ -1,21 +1,23 @@
 import OpenAI from 'openai'
-import { buildToolDefinitions, describeUIState, uiStateSchema } from '../../src/agent/catalog'
+import { buildToolDefinitions, describeUIState, uiStateSchema } from '../src/agent/catalog'
 
 /**
- * Cloudflare Pages Function backing the portfolio agent.
+ * The agent endpoint, served by the Worker in `worker/index.ts`.
  *
- * The OpenAI API key lives here and nowhere else — it is read from the Pages
+ * The OpenAI API key lives here and nowhere else — it is read from the Worker
  * secret store at request time and never travels to the browser. The client
  * sends conversation turns; it never sends a model, a system prompt, or a tool
  * list, because those are fixed server-side. Anything a visitor types is only
  * ever a `user` turn.
  */
 
-interface Env {
+export interface Env {
   OPENAI_API_KEY: string
   AGENT_MODEL?: string
   /** Optional KV namespace for rate limiting. Absent in local dev. */
   RATE_LIMIT?: KVNamespace
+  /** Static site in `dist/`, bound by wrangler.jsonc. */
+  ASSETS: Fetcher
 }
 
 /** Visitors get a small budget per window; enough to play, not to farm. */
@@ -145,7 +147,7 @@ function toOpenAITools() {
   }))
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export async function handleAgentRequest(request: Request, env: Env): Promise<Response> {
   if (!env.OPENAI_API_KEY) {
     return json({ error: 'not_configured' }, 503)
   }

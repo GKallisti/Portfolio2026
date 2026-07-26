@@ -1,0 +1,27 @@
+{
+  "name": "portfolio2026",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-09-23",
+
+  // The OpenAI SDK expects a few Node built-ins; without this the Worker
+  // fails to start rather than failing at request time.
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    // The Vite build. `binding` is what makes env.ASSETS available to the
+    // Worker, and it is required for the Worker to serve the site itself
+    // rather than being bypassed for static requests.
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+
+  // Bindings NOT declared here on purpose:
+  //   OPENAI_API_KEY  - a secret; set it in the dashboard, never in this file,
+  //                     which is committed to a public repo.
+  //   RATE_LIMIT      - the KV namespace. Add it in the dashboard, or declare
+  //                     it here with its id once the namespace exists.
+}

@@ -14,7 +14,7 @@ claims.
 
 ## Stack
 
-React 19 · TypeScript · Vite · Tailwind 4 · Zod · Cloudflare Pages Functions ·
+React 19 · TypeScript · Vite · Tailwind 4 · Zod · Cloudflare Workers ·
 OpenAI API
 
 ## Running it
@@ -26,25 +26,29 @@ npm run dev
 
 The site works fully without an API key — the assistant falls back to a local
 keyword router, and every command still executes. To run the real agent
-locally you need the Cloudflare function, which Vite's dev server does not
-serve:
+locally you need the Worker, which Vite's dev server does not run:
 
 ```bash
-npm run build && npx wrangler pages dev dist
+npm run build && npx wrangler dev
 ```
 
 Copy `.env.example` to `.dev.vars` and set `OPENAI_API_KEY` first.
 
-## Deploying (Cloudflare Pages)
+Current Wrangler needs **Node 22+**. On Node 20, `npx wrangler@3 dev` works and
+is close enough for checking routing and error handling — it just warns that it
+cannot honour the `compatibility_date` in `wrangler.jsonc`. Cloudflare's own
+build environment is unaffected either way.
+
+## Deploying (Cloudflare Workers)
 
 Step-by-step walkthrough in [DEPLOY.md](./DEPLOY.md). The short version:
 
 - Build command: `npm run build`
-- Output directory: `dist`
+- Deploy command: `npx wrangler deploy`
 - Set `OPENAI_API_KEY` as a **secret** under Settings → Variables and Secrets,
   then re-run the deployment — a new secret does not apply to an existing one
 - Optionally bind a KV namespace as `RATE_LIMIT` to enable per-IP rate limiting
-  (the function runs fine without it, just uncapped)
+  (the Worker runs fine without it, just uncapped)
 
 `OPENAI_API_KEY` is deliberately not `VITE_`-prefixed: anything with that
 prefix is inlined into the client bundle and would be public.
@@ -56,7 +60,9 @@ agent into its offline fallback rather than surfacing an error to the visitor.
 ## Layout
 
 ```
-functions/api/agent.ts   Cloudflare function: holds the API key, streams NDJSON
+wrangler.jsonc           Worker config: entry point + static asset binding
+worker/index.ts          Routes /api/* to the agent, everything else to assets
+worker/agent.ts          Holds the API key, streams NDJSON to the browser
 src/agent/catalog.ts     The action catalog — one Zod schema per action, which
                          produces both the model's tool definitions and the
                          runtime validation. Isomorphic; imported by both sides.
