@@ -15,13 +15,29 @@
     "binding": "ASSETS"
   },
 
+  // The OpenAI key, held in the account-level Secrets Store.
+  //
+  // Only the store id and the entry name live here — never the value, which is
+  // why this is safe in a public repo. Creating the secret in the Secrets Store
+  // is not enough on its own: without this binding the Worker cannot see it,
+  // which is exactly how it can look configured in the dashboard and still
+  // read as missing at runtime.
+  //
+  // If you would rather use a plain Worker secret (Settings -> Variables and
+  // Secrets, type Secret, name OPENAI_API_KEY), delete this block. The Worker
+  // accepts either form.
+  "secrets_store_secrets": [
+    {
+      "binding": "OPENAI_API_KEY",
+      "store_id": "f643d0ef050f4a06afb45ae518602ed7",
+      "secret_name": "OPENAI_API_KEY"
+    }
+  ],
+
   "observability": {
     "enabled": true
   }
 
-  // Bindings NOT declared here on purpose:
-  //   OPENAI_API_KEY  - a secret; set it in the dashboard, never in this file,
-  //                     which is committed to a public repo.
-  //   RATE_LIMIT      - the KV namespace. Add it in the dashboard, or declare
-  //                     it here with its id once the namespace exists.
+  // RATE_LIMIT (the KV namespace) is deliberately not declared: add it in the
+  // dashboard, or list it here with its id once the namespace exists.
 }

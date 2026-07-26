@@ -11,13 +11,41 @@ import { buildToolDefinitions, describeUIState, uiStateSchema } from '../src/age
  * ever a `user` turn.
  */
 
+/**
+ * Cloudflare has two different things called secrets, and they are not
+ * interchangeable:
+ *
+ *   - a Worker secret, bound directly as a string
+ *   - a Secrets Store secret, an account-level entry bound as an object you
+ *     have to `await .get()`
+ *
+ * Accepting both means the key can be moved between the two without a code
+ * change, and neither setup silently looks like "no key configured".
+ */
+type SecretValue = string | { get(): Promise<string> }
+
 export interface Env {
-  OPENAI_API_KEY: string
+  OPENAI_API_KEY?: SecretValue
   AGENT_MODEL?: string
   /** Optional KV namespace for rate limiting. Absent in local dev. */
   RATE_LIMIT?: KVNamespace
   /** Static site in `dist/`, bound by wrangler.jsonc. */
   ASSETS: Fetcher
+}
+
+async function readSecret(value: SecretValue | undefined): Promise<string | undefined> {
+  if (!value) return undefined
+  if (typeof value === 'string') return value.trim() || undefined
+  if (typeof value.get === 'function') {
+    try {
+      return (await value.get())?.trim() || undefined
+    } catch {
+      // A store that exists but cannot be read is the same as no key, as far
+      // as the visitor is concerned — they get the offline fallback.
+      return undefined
+    }
+  }
+  return undefined
 }
 
 /** Visitors get a small budget per window; enough to play, not to farm. */
@@ -28,7 +56,13 @@ const RATE_LIMIT_WINDOW_SECONDS = 300
 const MAX_TURNS = 20
 const MAX_CHARS_PER_TURN = 2000
 
-const DEFAULT_MODEL = 'gpt-5'
+/**
+ * A small model on purpose. The job here is to pick one or two actions from a
+ * nine-entry catalog and write a sentence — a frontier model is money and
+ * latency spent on nothing. Override with the AGENT_MODEL variable if a
+ * particular one is not available on the account.
+ */
+const DEFAULT_MODEL = 'gpt-4.1-mini'
 
 const SYSTEM_PROMPT = `You are the assistant embedded in Gisella Gonzalez's portfolio site. Gisella (handle: G.Kallisti) is an AI Integration Specialist in Tandil, Argentina, who builds agentic AI systems end to end.
 
@@ -148,13 +182,20 @@ function toOpenAITools() {
 }
 
 export async function handleAgentRequest(request: Request, env: Env): Promise<Response> {
-  if (!env.OPENAI_API_KEY) {
+  const apiKey = await readSecret(env.OPENAI_API_KEY)
+
+  if (!apiKey) {
     // Lists the *names* of the bindings the Worker can actually see — never
     // any value. It only appears while the Worker is misconfigured, and it
-    // turns "the key is set but nothing works" into a single look: either the
-    // name is misspelled, or it landed on a different environment or project.
+    // turns "the key is set but nothing works" into a single look: a
+    // misspelled name, a different environment, or a Secrets Store entry that
+    // was never bound to this Worker.
     return json(
-      { error: 'not_configured', bindings_visible: Object.keys(env).sort() },
+      {
+        error: 'not_configured',
+        bindings_visible: Object.keys(env).sort(),
+        key_binding_type: typeof env.OPENAI_API_KEY,
+      },
       503,
     )
   }
@@ -191,7 +232,7 @@ ${describeUIState(parsedState.data)}
 
 Do not call a tool to set a value the page already has.`
 
-  const client = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+  const client = new OpenAI({ apiKey })
 
   try {
     const stream = await client.chat.completions.create({
@@ -269,7 +310,16 @@ Do not call a tool to set a value the page already has.`
       return json({ error: 'rate_limited' }, 429)
     }
     if (error instanceof OpenAI.APIError) {
-      return json({ error: 'upstream_error' }, 502)
+      // A 4xx from OpenAI is almost always our own misconfiguration — most
+      // often a model this account cannot call — and the message says which,
+      // so surfacing it turns a silent fallback into an answer. 401 is the
+      // exception: its message echoes a masked form of the key, and this
+      // endpoint is public. The status code alone is enough to diagnose that
+      // one. A 5xx is their outage; the detail would be noise.
+      const status = error.status
+      const detail =
+        status && status < 500 && status !== 401 ? error.message : undefined
+      return json({ error: 'upstream_error', status, detail }, 502)
     }
     return json({ error: 'unexpected_error' }, 500)
   }
