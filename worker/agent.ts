@@ -149,7 +149,14 @@ function toOpenAITools() {
 
 export async function handleAgentRequest(request: Request, env: Env): Promise<Response> {
   if (!env.OPENAI_API_KEY) {
-    return json({ error: 'not_configured' }, 503)
+    // Lists the *names* of the bindings the Worker can actually see — never
+    // any value. It only appears while the Worker is misconfigured, and it
+    // turns "the key is set but nothing works" into a single look: either the
+    // name is misspelled, or it landed on a different environment or project.
+    return json(
+      { error: 'not_configured', bindings_visible: Object.keys(env).sort() },
+      503,
+    )
   }
 
   if (await isRateLimited(env, request)) {
