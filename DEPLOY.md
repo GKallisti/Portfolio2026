@@ -45,24 +45,51 @@ hasta que agregues la key en el paso siguiente. Eso es esperable.
 > **Cómo saber si el Worker está corriendo de verdad.** Si el sitio carga pero
 > el asistente siempre responde *"El modelo no está disponible"*, probá:
 >
-> ```bash
-> curl -X POST https://TU-DOMINIO/api/agent -H "content-type: application/json" -d "{}"
+> ```powershell
+> curl.exe -X POST https://TU-DOMINIO/api/agent -H "content-type: application/json" -d "{}"
 > ```
+>
+> **Ojo con PowerShell: `curl` ahí es un alias de `Invoke-WebRequest`**, que no
+> entiende `-H` ni `-d` y falla con un error de parámetros que no tiene nada que
+> ver con el sitio. Escribí `curl.exe` con la extensión — ese es el curl de
+> verdad, y viene con Windows.
 >
 > Un **400** significa que el Worker corre (rechazó el body vacío, que es lo
 > correcto). Un **405** significa que se está sirviendo el sitio como assets
 > estáticos y el Worker no se está ejecutando: revisá que `wrangler.jsonc` esté
 > en la raíz del repo y que el deploy command sea `npx wrangler deploy`.
+>
+> Un **503** significa que el Worker corre pero no ve la API key. La respuesta
+> incluye `bindings_visible` con los nombres que sí ve, que es lo que distingue
+> un typo de un secret que quedó en otro lado.
 
 ---
 
 ## 3. Poner la API key de OpenAI  ← lo importante
 
-La key va como **secret**, no como variable normal: un secret queda oculto
-después de guardarlo y no se puede volver a leer desde el panel.
+Cloudflare tiene **dos cosas distintas llamadas secret**, y no son
+intercambiables. El Worker acepta cualquiera de las dos, pero cada una se
+configura diferente.
 
-1. En tu Worker: **Settings** → **Variables and secrets**
-2. **Add** →
+### Opción A — Secrets Store (a nivel cuenta)
+
+Es la que está configurada en este repo. El secret vive en un almacén central
+reutilizable, y el Worker lo lee de forma asíncrona.
+
+1. **Storage & databases** → **Secrets Store** → **Create secret**
+   - Name: `OPENAI_API_KEY`
+   - Value: tu key
+2. Copiá el **Store ID** que aparece a la derecha
+3. Verificá que coincida con el `store_id` en `wrangler.jsonc`
+
+> ⚠️ **Crear el secret en el Store no alcanza.** Sin el bloque
+> `secrets_store_secrets` en `wrangler.jsonc`, el Worker no lo ve — y el panel
+> lo muestra como Active igual, que es lo confuso. El binding es lo que los
+> conecta.
+
+### Opción B — Worker secret (más simple)
+
+1. En tu Worker: **Settings** → **Variables and secrets** → **Add**
 
    | Campo | Valor |
    |---|---|
@@ -70,12 +97,25 @@ después de guardarlo y no se puede volver a leer desde el panel.
    | Variable name | `OPENAI_API_KEY` |
    | Value | tu key, la que empieza con `sk-` |
 
-3. **Save**
-4. Opcional, en el mismo lugar, como **Text** (no secret):
+2. **Save**
 
-   | Variable name | Value |
-   |---|---|
-   | `AGENT_MODEL` | el id de modelo que quieras usar |
+Si elegís esta, borrá el bloque `secrets_store_secrets` de `wrangler.jsonc`.
+
+### El modelo
+
+Opcional, como **Text** (no secret), en Variables and secrets:
+
+| Variable name | Value |
+|---|---|
+| `AGENT_MODEL` | el id de modelo que quieras usar |
+
+Por defecto usa `gpt-4.1-mini`. El agente elige una o dos acciones de un
+catálogo de nueve y escribe una frase — un modelo grande ahí es plata y
+latencia de más. Para ver qué modelos tenés disponibles:
+
+```powershell
+curl.exe https://api.openai.com/v1/models -H "Authorization: Bearer TU_API_KEY"
+```
 
 > ⚠️ **Un secret nuevo no se aplica solo.** Después de guardarlo hay que
 > redeployar: **Deployments** → el último → **Retry deployment**, o pushear

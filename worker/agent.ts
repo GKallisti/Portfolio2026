@@ -235,13 +235,16 @@ Do not call a tool to set a value the page already has.`
   const client = new OpenAI({ apiKey })
 
   try {
+    const model = env.AGENT_MODEL || DEFAULT_MODEL
+    const baseMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemPrompt },
+      ...validated.turns,
+    ]
+
     const stream = await client.chat.completions.create({
-      model: env.AGENT_MODEL || DEFAULT_MODEL,
+      model,
       stream: true,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...validated.turns,
-      ],
+      messages: baseMessages,
       tools: toOpenAITools(),
       tool_choice: 'auto',
     })
@@ -259,6 +262,7 @@ Do not call a tool to set a value the page already has.`
         // chunk for an index and the arguments accumulate as JSON fragments,
         // so they can only be parsed once the stream ends.
         const pending = new Map<number, { id: string; name: string; args: string }>()
+        let spokenText = ''
 
         try {
           for await (const chunk of stream) {
@@ -266,7 +270,10 @@ Do not call a tool to set a value the page already has.`
             if (!choice) continue
 
             const text = choice.delta?.content
-            if (text) send({ type: 'text', text })
+            if (text) {
+              spokenText += text
+              send({ type: 'text', text })
+            }
 
             for (const call of choice.delta?.tool_calls ?? []) {
               const slot = pending.get(call.index) ?? { id: '', name: '', args: '' }
@@ -277,8 +284,9 @@ Do not call a tool to set a value the page already has.`
             }
           }
 
-          for (const call of pending.values()) {
-            if (!call.name) continue
+          const calls = [...pending.values()].filter((c) => c.name)
+
+          for (const call of calls) {
             let input: unknown = {}
             try {
               input = call.args ? JSON.parse(call.args) : {}
@@ -287,6 +295,48 @@ Do not call a tool to set a value the page already has.`
               // it with a proper message rather than guessing at intent.
             }
             send({ type: 'action', id: call.id, name: call.name, input })
+          }
+
+          // Chat Completions puts tool calls and prose in separate turns: a
+          // reply that calls tools almost never carries text with it. Left at
+          // one round trip the agent changes the page in complete silence,
+          // which reads as broken. So when tools fired and nothing was said,
+          // close the loop and let it narrate what it just did — the presenter
+          // stage of the pipeline, and the only turn the visitor actually
+          // reads. Skipped entirely when the model already answered in prose.
+          if (calls.length > 0 && spokenText.trim().length === 0) {
+            const followUp = await client.chat.completions.create({
+              model,
+              stream: true,
+              messages: [
+                ...baseMessages,
+                {
+                  role: 'assistant',
+                  content: null,
+                  tool_calls: calls.map((c) => ({
+                    id: c.id,
+                    type: 'function' as const,
+                    function: { name: c.name, arguments: c.args || '{}' },
+                  })),
+                },
+                // The client applies these against a validated schema, so
+                // "applied" is the honest result to report back.
+                ...calls.map((c) => ({
+                  role: 'tool' as const,
+                  tool_call_id: c.id,
+                  content: 'applied',
+                })),
+              ],
+              tools: toOpenAITools(),
+              // Forced off: this turn exists to speak, and letting it call
+              // again would loop and re-apply what the visitor just got.
+              tool_choice: 'none',
+            })
+
+            for await (const chunk of followUp) {
+              const text = chunk.choices[0]?.delta?.content
+              if (text) send({ type: 'text', text })
+            }
           }
 
           send({ type: 'done' })
