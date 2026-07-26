@@ -1,5 +1,64 @@
 import OpenAI from 'openai'
 import { buildToolDefinitions, describeUIState, uiStateSchema } from '../src/agent/catalog'
+import { projects } from '../src/content/projects'
+import { credentials, education, experience, profile } from '../src/content/profile'
+
+/**
+ * The facts, rendered from the same content the page renders.
+ *
+ * Without this the model had the tool catalog and a one-paragraph bio and
+ * nothing else, so when asked what a project was it invented one — on a
+ * portfolio, in front of whoever is reading it. Generating the context from
+ * `src/content` rather than restating it here means the agent cannot drift
+ * from the site: change the copy, and what it knows changes with it.
+ */
+function buildKnowledgeBase(): string {
+  const projectLines = projects.map((p) => {
+    const name = typeof p.name === 'string' ? p.name : p.name.en
+    const links = [
+      p.href && `site: ${p.href}`,
+      p.download && `download: ${p.download}`,
+      p.repo && `repo: ${p.repo}`,
+    ].filter(Boolean).join(', ')
+
+    return [
+      `### ${name}${p.secret ? '  [HIDDEN - see the hidden project rules]' : ''}`,
+      `Status: ${p.status} (${p.year}). Stack: ${p.stack.join(', ')}.`,
+      p.tagline.en,
+      p.detail.en,
+      links && `Links — ${links}.`,
+      p.confidentialNote && `NOTE: ${p.confidentialNote.en}`,
+    ].filter(Boolean).join('\n')
+  })
+
+  const experienceLines = experience.map((e) => {
+    const company = typeof e.company === 'string' ? e.company : e.company.en
+    return `### ${e.role.en} — ${company} (${e.period.en})\n${e.highlights.en.join(' ')}`
+  })
+
+  return [
+    '## PROJECTS',
+    projectLines.join('\n\n'),
+    '',
+    '## EXPERIENCE',
+    experienceLines.join('\n\n'),
+    '',
+    '## CERTIFICATIONS',
+    credentials
+      .map((c) => `- ${c.name} (${c.issuer}, ${c.pending ? 'in preparation' : c.year})`)
+      .join('\n'),
+    '',
+    '## EDUCATION',
+    education
+      .map((e) => `- ${e.degree.en}, ${e.institution} (${e.period.en})`)
+      .join('\n'),
+    '',
+    '## CONTACT',
+    `Email ${profile.email}. GitHub ${profile.github}. LinkedIn ${profile.linkedin}. Based in ${profile.location.en}.`,
+  ].join('\n')
+}
+
+const KNOWLEDGE_BASE = buildKnowledgeBase()
 
 /**
  * The agent endpoint, served by the Worker in `worker/index.ts`.
@@ -74,6 +133,9 @@ You genuinely operate this page through your tools. When a visitor asks for some
 HOW TO BEHAVE
 - Always pair an action with a short line of text saying what you did. One or two sentences; never a paragraph.
 - If a visitor writes in Spanish, call setLanguage to switch the site to Spanish, and reply in Spanish. Same in reverse for English.
+- Spanish here is Argentine, and voseo is not optional: "querés" not "quieres", "podés" not "puedes", "mirá" not "mira", "contame" not "cuéntame". Never use "tú" or its verb forms — the rest of the site is written this way and a European register reads as though the assistant were bolted on from somewhere else.
+- You are Gisella's assistant, not Gisella. Talk about her in the third person: "Gisella built this", never "I built this". You speak in the first person only about what YOU are doing to the page ("I filtered the list").
+- Answer only from the reference section below. If it does not cover something, say so plainly and point at the contact section. Never fill a gap with a plausible guess — an invented detail about her work is worse than no answer, because whoever is reading may be deciding whether to hire her.
 - When asked about a project, call highlightProject so they can see it, then explain it briefly.
 - Answer questions about Gisella's experience from the context below. If you don't know something, say so and point them at the contact section — never invent a detail about her career.
 - You may be asked to do things you have no tool for. Say plainly what you can do instead.
@@ -227,7 +289,13 @@ export async function handleAgentRequest(request: Request, env: Env): Promise<Re
   // so page state can never be mistaken for something they typed.
   const systemPrompt = `${SYSTEM_PROMPT}
 
-CURRENT PAGE STATE
+# REFERENCE — everything you know about Gisella
+Generated from the same content the page displays. This is the whole of it:
+anything not here, you do not know.
+
+${KNOWLEDGE_BASE}
+
+# CURRENT PAGE STATE
 ${describeUIState(parsedState.data)}
 
 Do not call a tool to set a value the page already has.`
