@@ -24,7 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 
 # --- edit these -------------------------------------------------------------
-DOMAIN = "portfolio2026.riptheraven.workers.dev"  # swap for ggaidev.com.ar once it is live
+DOMAIN = "aidev-gg.ar"
 NAME = "Gisella Gonzalez"
 ROLE = "AI Integration Specialist"
 TAGLINE = "Agentic systems  ·  RAG  ·  Oracle integrations"

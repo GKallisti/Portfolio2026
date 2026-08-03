@@ -172,35 +172,44 @@ Deberías ver varios `400` y después `429`.
 
 ## 5. Dominio propio
 
-1. Comprá el dominio (si es `.com.ar`, se compra en **NIC Argentina**)
-2. En Cloudflare: **Websites** → **Add a site** → escribí el dominio
-3. Cloudflare te va a dar dos **nameservers**. Entrá al panel donde compraste
+**Dominio comprado: `aidev-gg.ar`.** Falta conectarlo a Cloudflare — esta
+parte es manual, no la puedo hacer por vos.
+
+1. En Cloudflare: **Websites** → **Add a site** → escribí `aidev-gg.ar`
+2. Cloudflare te va a dar dos **nameservers**. Entrá al panel donde compraste
    el dominio y reemplazá los nameservers por esos dos.
    - En NIC.ar: *Mis dominios* → el dominio → *Delegaciones* → editar
-4. La propagación tarda entre unos minutos y 24 horas
-5. Cuando Cloudflare marque el dominio como **Active**: volvé a tu Worker →
-   **Settings** → **Domains & Routes** → **Add** → **Custom domain**
+3. La propagación tarda entre unos minutos y 24 horas
+4. Cuando Cloudflare marque el dominio como **Active**: volvé a tu Worker
+   `portfolio2026` → **Settings** → **Domains & Routes** → **Add** →
+   **Custom domain** → escribí `aidev-gg.ar`
+5. Repetí el paso 4 con `www.aidev-gg.ar` si querés que ese también funcione
 
 El certificado HTTPS lo emite Cloudflare solo, no hay que hacer nada.
 
-### Después de conectar el dominio
+### Ya hecho de este lado
 
-La imagen que se ve al compartir el link tiene el dominio impreso. Actualizala:
+El `og:image` y `og:url` en `index.html`, y el `DOMAIN` en
+`scripts/make-og.py`, ya apuntan a `https://aidev-gg.ar` — no hace falta
+tocarlos. `public/og.png` ya está regenerado con el dominio nuevo impreso.
 
-1. Abrí `scripts/make-og.py` y cambiá `DOMAIN` por el dominio nuevo
-2. `pip install pillow fonttools brotli` (una sola vez)
-3. `python scripts/make-og.py`
-4. Commit del `public/og.png` nuevo y redeploy
+Verificá que **el nombre coincida exacto**: si el custom domain en Cloudflare
+queda como `www.aidev-gg.ar` mientras el HTML dice `aidev-gg.ar` (o viceversa),
+la tarjeta al compartir el link va a fallar aunque el sitio cargue bien.
 
-Aprovechá y pasá `og:image` en `index.html` a la URL absoluta
-(`https://tudominio.com.ar/og.png`). Con la ruta relativa funciona en la
-mayoría de los casos, pero algunos scrapers — LinkedIn entre ellos — son más
-confiables con la absoluta.
+### Verificar antes de compartir en LinkedIn
 
-Para verificar cómo quedó antes de publicar en LinkedIn, pegá la URL en el
-**Post Inspector** de LinkedIn: fuerza un re-scrapeo y te muestra la tarjeta
-real. Es útil porque LinkedIn cachea agresivamente y, si la ve rota una vez,
-puede quedarse con esa versión un buen rato.
+Una vez que el dominio esté conectado y propagado:
+
+```powershell
+curl.exe -I https://aidev-gg.ar/og.png
+```
+
+Un `200` confirma que la imagen se sirve desde el dominio nuevo. Después pegá
+`https://aidev-gg.ar` en el **Post Inspector** de LinkedIn: fuerza un
+re-scrapeo y te muestra la tarjeta real. Es útil porque LinkedIn cachea
+agresivamente y, si la ve rota una vez, puede quedarse con esa versión un buen
+rato.
 
 ---
 
