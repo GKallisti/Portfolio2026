@@ -150,7 +150,7 @@ export const projects: Project[] = [
     stack: ['WordPress', 'WooCommerce', 'PHP', 'MySQL', 'DNS', 'Hosting'],
     status: 'archived',
     year: '2022–2024',
-    href: 'https://premiermuebles.com/',
+    href: 'https://rodrigotolzen.com/',
     featured: false,
   },
 ]
