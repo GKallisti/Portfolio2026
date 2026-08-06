@@ -153,6 +153,12 @@ export const skillGroups: SkillGroup[] = [
 
 export const credentials: Credential[] = [
   {
+    id: 'oci-enterprise-ai',
+    name: 'Oracle Cloud Infrastructure 2026 Enterprise AI Professional',
+    issuer: 'Oracle',
+    year: '2026',
+  },
+  {
     id: 'oracle-agent-studio',
     name: 'Oracle Fusion AI Agent Studio Certified Foundations Associate',
     issuer: 'Oracle',
@@ -163,13 +169,6 @@ export const credentials: Credential[] = [
     name: 'Oracle Fusion Transportation and Global Trade Management Cloud 2024 Implementation Professional',
     issuer: 'Oracle',
     year: '2024',
-  },
-  {
-    id: 'oci-ai-foundations',
-    name: 'OCI AI Foundations Associate',
-    issuer: 'Oracle',
-    year: '2026',
-    pending: true,
   },
   {
     id: 'efset',
