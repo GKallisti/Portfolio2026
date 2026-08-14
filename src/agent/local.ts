@@ -82,7 +82,17 @@ const RULES: Rule[] = [
     reply: { en: 'Took you to the contact section.', es: 'Te llevé a la sección de contacto.' },
   },
   {
-    patterns: [/\b(experience|experiencia|cv|resume|curriculum)\b/],
+    // Ahead of the experience rule: someone typing "cv" wants the file, not a
+    // section that paraphrases it.
+    patterns: [/\b(cv|resume|resumen|curriculum|vitae|pdf)\b/],
+    action: { name: 'showCV', input: {} },
+    reply: {
+      en: 'Her CV is right here — the download button below serves the English version, and the link beside it has the Spanish one.',
+      es: 'Acá está su CV — el botón de abajo descarga la versión en español, y el link al lado tiene la inglesa.',
+    },
+  },
+  {
+    patterns: [/\b(experience|experiencia)\b/],
     action: { name: 'navigateTo', input: { section: 'experience' } },
     reply: { en: 'Took you to the experience section.', es: 'Te llevé a la sección de experiencia.' },
   },

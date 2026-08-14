@@ -35,6 +35,12 @@ export interface UIState {
    *  in finding it again, and a stale unlock makes the site look ordinary. */
   secretUnlocked: boolean
   /**
+   * Bumped by `showCV`. A counter rather than a boolean so asking twice draws
+   * attention twice — a flag would already be `true` the second time and the
+   * highlight would never re-fire.
+   */
+  cvNonce: number
+  /**
    * Bumped only by an explicit `navigateTo`, never by the scroll observer.
    * Without it, scrolling would look identical to a navigation request and the
    * two would fight each other in a loop.
@@ -82,6 +88,18 @@ export function applyAction(state: UIState, action: Action): UIState {
         ...state,
         highlightedProject: action.input.projectId,
         activeSection: 'work',
+        navigationNonce: state.navigationNonce + 1,
+      }
+
+    case 'showCV':
+      // Deliberately does not open the PDF. The agent's reply arrives from a
+      // fetch, so any window.open here is outside a user gesture and every
+      // browser blocks it — the visitor would be told a download started that
+      // never did. Pointing at the button is the honest version.
+      return {
+        ...state,
+        cvNonce: state.cvNonce + 1,
+        activeSection: 'contact',
         navigationNonce: state.navigationNonce + 1,
       }
 
@@ -177,6 +195,7 @@ function initialState(): UIState {
     filter: EMPTY_FILTER,
     highlightedProject: null,
     activeSection: 'home',
+    cvNonce: 0,
     navigationNonce: 0,
     secretUnlocked: false,
     ...readPreferences(),

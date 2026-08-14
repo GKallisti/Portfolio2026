@@ -35,6 +35,20 @@ export const profile = {
   github: 'https://github.com/GKallisti',
   linkedin: 'https://linkedin.com/in/kallisti-gg',
 
+  /* Two separately written CVs, not one file with a translation bolted on.
+     Keyed by language so `t(profile.cv)` hands a Spanish reader the Spanish
+     PDF without any branching at the call site. The filenames are what ends up
+     in a recruiter's downloads folder, so they carry her name rather than the
+     export tool's. */
+  cv: {
+    en: '/cv/gisella-gonzalez-cv-en.pdf',
+    es: '/cv/gisella-gonzalez-cv-es.pdf',
+  } satisfies Localized,
+  cvFilename: {
+    en: 'Gisella Gonzalez - CV.pdf',
+    es: 'Gisella Gonzalez - CV (ES).pdf',
+  } satisfies Localized,
+
   /* Drop a square-ish image at `public/gisella.jpg` and this renders in the
      About section. Left null until the file exists so the layout never shows
      a broken image. */

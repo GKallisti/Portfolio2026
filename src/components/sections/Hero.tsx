@@ -47,6 +47,16 @@ export function Hero() {
         >
           {t(ui.nav.contact)}
         </button>
+        {/* Tertiary on purpose — a recruiter who wants the PDF and nothing else
+            should not have to scroll to find it, but the page itself is the
+            better artefact and stays the primary path. */}
+        <a
+          href={t(profile.cv)}
+          download={t(profile.cvFilename)}
+          className="text-muted hover:text-accent px-1 text-sm underline underline-offset-4 transition-colors"
+        >
+          {t(ui.cv.download)} ↓
+        </a>
         <p className="text-muted w-full font-mono text-xs sm:w-auto sm:pl-2">
           ↘ {t(ui.hero.tryAgent)}
         </p>

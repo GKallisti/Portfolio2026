@@ -94,6 +94,12 @@ export const actionCatalog = {
     }),
   },
 
+  showCV: {
+    summary:
+      "Scroll to the contact section and single out the CV download, in whichever language the site is currently in. Use when the visitor asks for her CV, résumé, or a document to pass on to someone. This points at the download — it does not start it, because the visitor still has to click.",
+    schema: z.object({}),
+  },
+
   setEffects: {
     summary:
       'Turn the retro scanline/glow flourish on or off. Turn it off if the visitor finds it distracting.',

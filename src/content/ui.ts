@@ -62,6 +62,15 @@ export const ui = {
     },
   },
 
+  cv: {
+    download: { en: 'Download CV', es: 'Descargar CV' },
+    /* The file served follows the site language, so someone reading in English
+       who wants the Spanish version has no way to ask for it — hence the
+       cross-link, labelled in the language it leads to. */
+    otherLanguage: { en: 'Versión en español', es: 'English version' },
+    format: { en: 'PDF · 1 page', es: 'PDF · 1 página' },
+  },
+
   credentials: {
     inPreparation: { en: 'In preparation', es: 'En preparación' },
     inProgress: { en: 'In progress', es: 'En curso' },
