@@ -90,6 +90,17 @@ function ProjectCard({
           </a>
         )}
 
+        {project.landing && (
+          <a
+            href={project.landing}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="text-muted hover:text-text transition-colors"
+          >
+            {t(ui.projects.landing)} ↗
+          </a>
+        )}
+
         {project.href && (
           <a
             href={project.href}

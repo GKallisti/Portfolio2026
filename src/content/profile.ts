@@ -135,6 +135,7 @@ export const skillGroups: SkillGroup[] = [
     items: [
       'Oracle Digital Assistant',
       'OCI Generative AI',
+      'Oracle Fusion AI Agent Studio',
       'Oracle Transportation Management',
       'Oracle Cloud Infrastructure',
     ],
@@ -169,6 +170,12 @@ export const credentials: Credential[] = [
   {
     id: 'oci-enterprise-ai',
     name: 'Oracle Cloud Infrastructure 2026 Enterprise AI Professional',
+    issuer: 'Oracle',
+    year: '2026',
+  },
+  {
+    id: 'oracle-agent-studio-dev',
+    name: 'Oracle Fusion AI Agent Studio Certified Developer Professional',
     issuer: 'Oracle',
     year: '2026',
   },

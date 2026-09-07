@@ -46,6 +46,12 @@ export interface Project {
   repo?: string
   /** Direct download/install page, for projects that ship an app. */
   download?: string
+  /**
+   * The app's own landing page, when it is a separate destination from both
+   * the store listing and the main site. Kept as its own field so publishing
+   * to a store never silently drops the page that was built to sell the app.
+   */
+  landing?: string
   /** Shown in place of links when there is nothing public to point at. */
   confidentialNote?: Localized
   featured: boolean

@@ -17,16 +17,16 @@ export const projects: Project[] = [
     id: 'enmoto',
     name: 'EnMoto',
     tagline: {
-      en: 'A production mobile platform for the motorcycle community, built solo.',
-      es: 'Una plataforma móvil en producción para la comunidad motociclista, hecha en solitario.',
+      en: 'A mobile platform for the motorcycle community, built solo and live on Google Play.',
+      es: 'Una plataforma móvil para la comunidad motociclista, hecha en solitario y publicada en Google Play.',
     },
     description: {
       en: 'Social network, marketplace and anti-theft alert network in one app, with an AI assistant that plans routes conversationally.',
       es: 'Red social, marketplace y red de alertas antirrobo en una sola app, con un asistente de IA que planifica rutas conversando.',
     },
     detail: {
-      en: 'Every layer is mine: a React 19 + TypeScript frontend packaged as a native Android app through Capacitor, a .NET 10 API in Clean Architecture with CQRS, PostGIS for geospatial queries, three real-time SignalR hubs, and over 90 automated tests running in CI. It ships through a Dockerised GitHub Actions pipeline to an Oracle Cloud VM with automated backups, health checks and error monitoring — all on free-tier infrastructure. The route assistant runs on Semantic Kernel, combining an LLM with OpenRouteService and Nominatim so riders can ask for a route in plain language.',
-      es: 'Cada capa es mía: un frontend React 19 + TypeScript empaquetado como app nativa de Android con Capacitor, una API .NET 10 en Clean Architecture con CQRS, PostGIS para consultas geoespaciales, tres hubs SignalR en tiempo real y más de 90 tests automatizados corriendo en CI. Se despliega mediante un pipeline dockerizado de GitHub Actions a una VM de Oracle Cloud, con backups automáticos, health checks y monitoreo de errores, todo sobre infraestructura de capa gratuita. El asistente de rutas corre sobre Semantic Kernel, combinando un LLM con OpenRouteService y Nominatim para que quien maneja pueda pedir una ruta en lenguaje natural.',
+      en: 'Every layer is mine: a React 19 + TypeScript frontend packaged as a native Android app through Capacitor and published on Google Play, a .NET 10 API in Clean Architecture with CQRS, PostGIS for geospatial queries, three real-time SignalR hubs, and over 90 automated tests running in CI. It ships through a Dockerised GitHub Actions pipeline to an Oracle Cloud VM with automated backups, health checks and error monitoring — all on free-tier infrastructure. The route assistant runs on Semantic Kernel, combining an LLM with OpenRouteService and Nominatim so riders can ask for a route in plain language.',
+      es: 'Cada capa es mía: un frontend React 19 + TypeScript empaquetado como app nativa de Android con Capacitor y publicado en Google Play, una API .NET 10 en Clean Architecture con CQRS, PostGIS para consultas geoespaciales, tres hubs SignalR en tiempo real y más de 90 tests automatizados corriendo en CI. Se despliega mediante un pipeline dockerizado de GitHub Actions a una VM de Oracle Cloud, con backups automáticos, health checks y monitoreo de errores, todo sobre infraestructura de capa gratuita. El asistente de rutas corre sobre Semantic Kernel, combinando un LLM con OpenRouteService y Nominatim para que quien maneja pueda pedir una ruta en lenguaje natural.',
     },
     domains: ['fullstack', 'mobile', 'ai'],
     stack: [
@@ -44,8 +44,11 @@ export const projects: Project[] = [
     ],
     status: 'production',
     year: '2025',
-    href: 'https://enmoto.com.ar',
-    download: 'https://enmoto.com.ar/descargar',
+    /* Straight to the Play Store listing. No `hl` parameter on purpose: Google
+       serves the store page in the visitor's own locale, and pinning it to
+       es_AR would show Spanish to an English-speaking recruiter. */
+    download: 'https://play.google.com/store/apps/details?id=com.enmoto.app',
+    landing: 'https://enmoto.com.ar/descargar',
     featured: true,
   },
   {

@@ -53,6 +53,7 @@ export const ui = {
     readLess: { en: 'Read less', es: 'Leer menos' },
     visit: { en: 'Visit site', es: 'Ver sitio' },
     download: { en: 'Get the app', es: 'Descargar la app' },
+    landing: { en: 'App home', es: 'Home de la app' },
     source: { en: 'Source', es: 'Código' },
     status: {
       production: { en: 'In production', es: 'En producción' },

@@ -19,6 +19,7 @@ function buildKnowledgeBase(lang: Language): string {
     const links = [
       p.href && `site: ${p.href}`,
       p.download && `download: ${p.download}`,
+      p.landing && `app page: ${p.landing}`,
       p.repo && `repo: ${p.repo}`,
     ].filter(Boolean).join(', ')
 
