@@ -31,7 +31,11 @@ export const profile = {
     en: 'I work across the Oracle AI ecosystem and the modern LLM stack: agentic architecture, RAG pipelines and enterprise API integration. On the side I am studying video game development — which is where the arcade streak running through this page comes from.',
     es: 'Trabajo tanto en el ecosistema de IA de Oracle como en el stack moderno de LLMs: arquitectura agéntica, pipelines de RAG e integración de APIs enterprise. En paralelo estudio desarrollo de videojuegos — de ahí viene la veta arcade que recorre esta página.',
   } satisfies Localized,
-  email: 'gg.kallisti@gmail.com',
+  /* On the domain rather than the personal Gmail: it is the address the site
+     hands out, so it should survive her changing mail providers. Cloudflare
+     forwards it to the Gmail inbox, which is receive-only - fine here, since
+     everything downstream of this is a `mailto:` for someone writing to her. */
+  email: 'reachout@aidev-gg.ar',
   github: 'https://github.com/GKallisti',
   linkedin: 'https://linkedin.com/in/kallisti-gg',
 
