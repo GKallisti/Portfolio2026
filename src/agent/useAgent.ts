@@ -106,6 +106,7 @@ export function useAgent() {
         accent: state.accent,
         language: state.language,
         effects: state.effects,
+        page: state.page,
         activeSection: state.activeSection,
         filter: state.filter,
         highlightedProject: state.highlightedProject,

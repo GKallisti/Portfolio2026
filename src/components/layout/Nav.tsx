@@ -13,6 +13,9 @@ export function Nav() {
   const { t } = useT()
   const [menuOpen, setMenuOpen] = useState(false)
 
+  // The in-depth pages belong to a project card, so "Work" stays lit there.
+  const currentSection: SectionId = state.page === 'home' ? state.activeSection : 'work'
+
   const go = (section: SectionId) => {
     run({ name: 'navigateTo', input: { section } })
     setMenuOpen(false)
@@ -38,10 +41,10 @@ export function Nav() {
               <button
                 type="button"
                 onClick={() => go(section)}
-                aria-current={state.activeSection === section ? 'true' : undefined}
+                aria-current={currentSection === section ? 'true' : undefined}
                 className={[
                   'rounded-md px-3 py-1.5 text-sm transition-colors',
-                  state.activeSection === section
+                  currentSection === section
                     ? 'text-accent'
                     : 'text-muted hover:text-text',
                 ].join(' ')}

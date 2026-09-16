@@ -130,6 +130,25 @@ export const ui = {
     language: { en: 'Switch language', es: 'Cambiar idioma' },
     effects: { en: 'Toggle retro effects', es: 'Activar/desactivar efectos retro' },
     menu: { en: 'Menu', es: 'Menú' },
+    skipToContent: { en: 'Skip to content', es: 'Saltar al contenido' },
+  },
+
+  deepDive: {
+    /* Above the links to the in-depth pages on a project card. */
+    cardLabel: { en: 'In depth', es: 'En profundidad' },
+    backToWork: { en: 'Back to projects', es: 'Volver a proyectos' },
+    pagesNav: { en: 'EnMoto in depth', es: 'EnMoto en profundidad' },
+    next: { en: 'Next', es: 'Siguiente' },
+    previous: { en: 'Previous', es: 'Anterior' },
+    swipeHint: { en: 'Swipe the diagram sideways', es: 'Deslizá el diagrama hacia los costados' },
+    diagram: { en: 'Diagram', es: 'Diagrama' },
+    contents: { en: 'Contents', es: 'Contenido' },
+    highlight: { en: 'Highlight in the diagrams', es: 'Resaltar en los diagramas' },
+    highlightHint: {
+      en: 'Pick a technology to see where it shows up in the system.',
+      es: 'Tocá una tecnología para ver en qué partes del sistema aparece.',
+    },
+    clearHighlight: { en: 'Clear', es: 'Limpiar' },
   },
 
   footer: {

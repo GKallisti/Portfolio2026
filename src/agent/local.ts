@@ -20,6 +20,12 @@ interface Rule {
   /** `null` for rules that only answer — a hint, with nothing to execute. */
   action: { name: string; input: unknown } | null
   reply: Record<Language, string>
+  /**
+   * Other action names this rule makes redundant. "How does EnMoto work
+   * inside" also mentions EnMoto, and highlighting the card would drag the
+   * visitor back to the home page after opening the page they asked for.
+   */
+  supersedes?: string[]
 }
 
 function normalize(text: string): string {
@@ -67,6 +73,33 @@ const RULES: Rule[] = [
     patterns: [/\b(english|ingles)\b/],
     action: { name: 'setLanguage', input: { language: 'en' } },
     reply: { en: 'Switched the site to English.', es: 'Cambié el sitio a inglés.' },
+  },
+  {
+    // Both in-depth page rules sit ahead of the plain EnMoto rule, which they
+    // supersede, and both require "enmoto" in the prompt: without it, "how
+    // does the agent work?" would open a page about a different project.
+    patterns: [
+      /\benmoto\b.*\b(architecture|arquitectura|under the hood|por dentro|technical|tecnic\w*|diagram\w*|flows?|flujos?|stack|works?|built|funciona|hech[oa]|armad[oa])\b/,
+      /\b(architecture|arquitectura|under the hood|technical|tecnic\w*|diagram\w*|flows?|flujos?|stack|works?|built|funciona|hech[oa]|armad[oa])\b.*\benmoto\b/,
+    ],
+    action: { name: 'openPage', input: { page: 'enmoto-architecture' } },
+    supersedes: ['highlightProject'],
+    reply: {
+      en: 'Opened the page on how EnMoto works inside — seven flows, drawn out.',
+      es: 'Abrí la página de cómo funciona EnMoto por dentro — siete flujos dibujados.',
+    },
+  },
+  {
+    patterns: [
+      /\benmoto\b.*\b(value|business|negocio|solves?|resuelve|problems?|problemas?|para que sirve)\b/,
+      /\b(value proposition|propuesta de valor|business|negocio|solves?|resuelve|problems?|problemas?|para que sirve)\b.*\benmoto\b/,
+    ],
+    action: { name: 'openPage', input: { page: 'enmoto-product' } },
+    supersedes: ['highlightProject'],
+    reply: {
+      en: 'Opened the page on what EnMoto solves, and why each decision was made.',
+      es: 'Abrí la página de qué resuelve EnMoto, y por qué se decidió cada cosa.',
+    },
   },
   {
     patterns: [/\benmoto\b/],
@@ -161,6 +194,7 @@ export function routeLocally(prompt: string, language: Language): LocalResult {
     if (!parsed.ok) continue
 
     claimed.add(key)
+    rule.supersedes?.forEach((name) => claimed.add(name))
     matched.push(rule)
     actions.push(parsed.action)
   }

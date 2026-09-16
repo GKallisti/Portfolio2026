@@ -210,3 +210,28 @@
       color-mix(in srgb, var(--c-accent) 25%, transparent);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   In-depth page diagrams.
+
+   Singling out a technology dims everything else in the drawing. A diagram
+   only dims when it actually contains that technology — `:has()` checks — so
+   one that does not stays fully legible instead of fading to nothing.
+   Opacity, not colour, is what transitions here: a transition on a colour
+   read from a custom property would get stuck across a theme change.
+   --------------------------------------------------------------------------- */
+.diagram > * {
+  transition: opacity 180ms ease;
+}
+
+.diagram:has([data-hl]) > :not(defs, [data-hl]) {
+  opacity: 0.35;
+}
+
+.diagram:has([data-hl]) > [data-tech]:not([data-hl]) {
+  opacity: 0.18;
+}
+
+.diagram [data-hl] .diagram-box {
+  stroke-width: 2.5;
+}

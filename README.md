@@ -61,16 +61,32 @@ agent into its offline fallback rather than surfacing an error to the visitor.
 
 ```
 wrangler.jsonc           Worker config: entry point + static asset binding
-worker/index.ts          Routes /api/* to the agent, everything else to assets
+worker/index.ts          Routes /api/* to the agent, in-depth page paths to the
+                         app shell, everything else to assets
 worker/agent.ts          Holds the API key, streams NDJSON to the browser
 src/agent/catalog.ts     The action catalog — one Zod schema per action, which
                          produces both the model's tool definitions and the
                          runtime validation. Isomorphic; imported by both sides.
 src/agent/useAgent.ts    Client loop and pipeline stages
 src/agent/local.ts       Offline keyword router used when the model is away
-src/store/ui.tsx         UI state; the agent's execution target
+src/store/ui.tsx         UI state; the agent's execution target. Also owns the
+                         current page and keeps the URL in step with it
 src/content/             All copy, bilingual via `Localized<T>`
+src/content/pages.ts     Registry of in-depth pages: paths, labels, and the key
+                         points the agent is given about each
+src/components/pages/    The in-depth pages, code-split. `diagram.tsx` draws the
+                         SVG diagrams from theme tokens only
 ```
+
+### In-depth pages
+
+`/enmoto/product` and `/enmoto/architecture` are real routes without a router
+library: the page lives in the UI store (so the agent opens it with `openPage`,
+like any other action) and `UIProvider` mirrors it to the address bar. Adding
+one means an entry in `src/content/pages.ts` and a loader in
+`src/components/pages/registry.ts`; the Worker serves the shell for every path
+in that registry and still 404s anything else. If a page changes a claim,
+update its `keyPoints` too, or the agent will contradict the page it opened.
 
 ### Adding a capability to the agent
 

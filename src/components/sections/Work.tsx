@@ -5,6 +5,8 @@ import type { Project } from '@/content/types'
 import { useT } from '@/i18n'
 import { ui } from '@/content/ui'
 import { useUI } from '@/store/ui'
+import { deepDivesFor } from '@/content/pages'
+import { PageLink } from '@/components/layout/PageLink'
 
 function ProjectCard({
   project,
@@ -16,6 +18,7 @@ function ProjectCard({
   const { t } = useT()
   const [expanded, setExpanded] = useState(false)
   const ref = useRef<HTMLElement>(null)
+  const pages = deepDivesFor(project.id)
 
   // When the agent highlights a project, open it and bring it into view.
   useEffect(() => {
@@ -129,6 +132,40 @@ function ProjectCard({
           </span>
         )}
       </div>
+
+      {/* Outside "Read more" on purpose: these pages are the strongest thing
+          on the card, and hiding them behind an expand would bury them. */}
+      {pages.length > 0 && (
+        <div className="border-border mt-6 border-t pt-5">
+          <p className="text-muted mb-3 font-mono text-[11px] tracking-widest uppercase">
+            {t(ui.deepDive.cardLabel)}
+          </p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {pages.map((page, index) => (
+              <li key={page.id}>
+                <PageLink
+                  page={page.id}
+                  className="group bg-raised border-border hover:border-accent flex h-full flex-col gap-1.5 rounded-lg border p-4 transition-colors"
+                >
+                  <span className="flex items-baseline gap-2.5">
+                    <span className="text-pixel text-accent text-[9px]" aria-hidden="true">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="font-display font-semibold">{t(page.label)}</span>
+                    <span
+                      className="text-accent ml-auto transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    >
+                      →
+                    </span>
+                  </span>
+                  <span className="text-muted text-sm leading-snug">{t(page.teaser)}</span>
+                </PageLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </article>
   )
 }

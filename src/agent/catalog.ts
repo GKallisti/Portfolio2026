@@ -3,6 +3,7 @@ import { z } from 'zod'
 // Cloudflare Pages Function build, which does not resolve Vite aliases.
 import { LANGUAGES, PROJECT_DOMAINS } from '../content/types'
 import { allStackTags, projects } from '../content/projects'
+import { DEEP_DIVE_IDS, PAGE_IDS, deepDiveList } from '../content/pages'
 
 /**
  * The declarative action catalog.
@@ -83,6 +84,15 @@ export const actionCatalog = {
     summary: 'Scroll the page to a section.',
     schema: z.object({
       section: z.enum(SECTIONS).describe('The section to scroll to.'),
+    }),
+  },
+
+  openPage: {
+    summary: `Open one of the in-depth pages that hang off a project card. Use when the visitor wants more depth than the card gives — how something works, why it was built that way. Available pages: ${deepDiveList
+      .map((page) => `"${page.id}" (${page.label.en}: ${page.teaser.en})`)
+      .join('; ')}.`,
+    schema: z.object({
+      page: z.enum(DEEP_DIVE_IDS).describe('The id of the page to open.'),
     }),
   },
 
@@ -202,6 +212,7 @@ export const uiStateSchema = z.object({
   accent: z.enum(ACCENTS),
   language: z.enum(LANGUAGES),
   effects: z.boolean(),
+  page: z.enum(PAGE_IDS),
   activeSection: z.enum(SECTIONS),
   filter: z.object({
     domain: z.enum(PROJECT_DOMAINS).nullable(),
@@ -235,7 +246,10 @@ export function describeUIState(state: UIStateSnapshot): string {
     `accent: ${state.accent}`,
     `language: ${state.language}`,
     `retro effects: ${state.effects ? 'on' : 'off'}`,
-    `visible section: ${state.activeSection}`,
+    `page: ${state.page === 'home' ? 'the main page' : `the in-depth page "${state.page}"`}`,
+    // Sections only exist on the main page; on an in-depth page the value is
+    // whatever was last in view there, and reporting it would mislead.
+    ...(state.page === 'home' ? [`visible section: ${state.activeSection}`] : []),
     `projects: ${filter}`,
     `highlighted project: ${state.highlightedProject ?? 'none'}`,
   ].join('; ')

@@ -8,8 +8,10 @@ import {
   useRef,
   type ReactNode,
 } from 'react'
+import { flushSync } from 'react-dom'
 import { ACCENTS, THEMES, type Accent, type Action, type SectionId, type Theme } from '@/agent/catalog'
 import { LANGUAGES, type Language, type ProjectDomain } from '@/content/types'
+import { pageForPath, pathForPage, type PageId } from '@/content/pages'
 
 /**
  * The UI store is the agent's execution target. Every action in the catalog
@@ -30,6 +32,12 @@ export interface UIState {
   effects: boolean
   filter: ProjectFilter
   highlightedProject: string | null
+  /**
+   * Which route is showing. Lives in the store rather than in a router so the
+   * agent can open a page through the same validated path as everything else;
+   * the URL is kept in step with it by `UIProvider`.
+   */
+  page: PageId
   activeSection: SectionId
   /** Whether the hidden project has been found. Not persisted — the fun is
    *  in finding it again, and a stale unlock makes the site look ordinary. */
@@ -74,9 +82,12 @@ export function applyAction(state: UIState, action: Action): UIState {
     case 'clearFilters':
       return { ...state, filter: EMPTY_FILTER, highlightedProject: null }
 
+    // Sections live on the main page, so every action that scrolls to one also
+    // brings the visitor back there from an in-depth page.
     case 'navigateTo':
       return {
         ...state,
+        page: 'home',
         activeSection: action.input.section,
         navigationNonce: state.navigationNonce + 1,
       }
@@ -87,6 +98,7 @@ export function applyAction(state: UIState, action: Action): UIState {
       return {
         ...state,
         highlightedProject: action.input.projectId,
+        page: 'home',
         activeSection: 'work',
         navigationNonce: state.navigationNonce + 1,
       }
@@ -99,7 +111,15 @@ export function applyAction(state: UIState, action: Action): UIState {
       return {
         ...state,
         cvNonce: state.cvNonce + 1,
+        page: 'home',
         activeSection: 'contact',
+        navigationNonce: state.navigationNonce + 1,
+      }
+
+    case 'openPage':
+      return {
+        ...state,
+        page: action.input.page,
         navigationNonce: state.navigationNonce + 1,
       }
 
@@ -113,6 +133,7 @@ export function applyAction(state: UIState, action: Action): UIState {
         ...state,
         secretUnlocked: true,
         highlightedProject: 'arg-idle',
+        page: 'home',
         activeSection: 'work',
         navigationNonce: state.navigationNonce + 1,
       }
@@ -123,6 +144,7 @@ export function applyAction(state: UIState, action: Action): UIState {
 type InternalEvent =
   | { type: 'agent-action'; action: Action }
   | { type: 'observed-section'; section: SectionId }
+  | { type: 'observed-page'; page: PageId }
   | { type: 'clear-highlight' }
 
 function reducer(state: UIState, event: InternalEvent): UIState {
@@ -136,6 +158,9 @@ function reducer(state: UIState, event: InternalEvent): UIState {
         : { ...state, activeSection: event.section }
     case 'clear-highlight':
       return { ...state, highlightedProject: null }
+    case 'observed-page':
+      // Back/forward in the browser, not a navigation request — so no nonce.
+      return state.page === event.page ? state : { ...state, page: event.page }
   }
 }
 
@@ -194,6 +219,7 @@ function initialState(): UIState {
     effects: !prefersReducedMotion,
     filter: EMPTY_FILTER,
     highlightedProject: null,
+    page: typeof window === 'undefined' ? 'home' : pageForPath(window.location.pathname),
     activeSection: 'home',
     cvNonce: 0,
     navigationNonce: 0,
@@ -215,7 +241,29 @@ const UIContext = createContext<UIContextValue | null>(null)
 export function UIProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, initialState)
 
+  // Read by callbacks that must stay referentially stable. Updated after
+  // commit rather than during render; everything that reads it is an event.
+  const stateRef = useRef(state)
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
   const run = useCallback((action: Action) => {
+    // Leaving the current page: remember where the visitor was on it, so Back
+    // returns them to the project card they clicked rather than to the top.
+    // Recorded here, before the dispatch, because by the time an effect runs
+    // the old page is gone and the scroll position has been clamped to the
+    // new one's height.
+    if (applyAction(stateRef.current, action).page !== stateRef.current.page) {
+      try {
+        window.history.replaceState(
+          { ...(window.history.state as object | null), scrollY: window.scrollY },
+          '',
+        )
+      } catch {
+        // Losing the scroll position is not worth failing a navigation over.
+      }
+    }
     dispatch({ type: 'agent-action', action })
   }, [])
 
@@ -262,6 +310,34 @@ export function UIProvider({ children }: { children: ReactNode }) {
       delete root.dataset.themeSwitching
     }
   }, [state.theme, state.accent])
+
+  // Keep the address bar in step with the page, so an in-depth page can be
+  // shared, bookmarked and reloaded. Compared against the current path first:
+  // a Back navigation has already changed the URL, and pushing again would
+  // clobber the forward history.
+  useEffect(() => {
+    const path = pathForPage(state.page)
+    if (window.location.pathname === path) return
+    window.history.pushState({}, '', path)
+  }, [state.page])
+
+  useEffect(() => {
+    const onPopState = (event: PopStateEvent) => {
+      const page = pageForPath(window.location.pathname)
+      // Fragment links (#section) also fire popstate; within one page the
+      // browser's own scrolling is already right.
+      if (page === stateRef.current.page) return
+
+      // Rendered synchronously so the restored offset lands on the page being
+      // returned to, not on the one being left.
+      flushSync(() => dispatch({ type: 'observed-page', page }))
+      const saved = (event.state as { scrollY?: unknown } | null)?.scrollY
+      window.scrollTo({ top: typeof saved === 'number' ? saved : 0, behavior: 'instant' })
+    }
+
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   // Destructured so the dependency list is exactly the persisted set — reading
   // `state[k]` inside the effect would work but leaves the linter unable to

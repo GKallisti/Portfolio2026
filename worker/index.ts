@@ -1,4 +1,5 @@
 import { handleAgentRequest, type Env } from './agent'
+import { isDeepDivePath } from '../src/content/pages'
 
 /**
  * Worker entry point.
@@ -34,6 +35,14 @@ export default {
         status: 404,
         headers: { 'content-type': 'application/json' },
       })
+    }
+
+    // In-depth pages are client-side routes: there is no file at that path,
+    // so hand over the app shell and let the store read the URL. Matched
+    // against the known list rather than falling back for every unknown path,
+    // so a mistyped URL is still a 404 and not a 200 that renders the home page.
+    if ((request.method === 'GET' || request.method === 'HEAD') && isDeepDivePath(url.pathname)) {
+      return env.ASSETS.fetch(new Request(new URL('/', url), request))
     }
 
     return env.ASSETS.fetch(request)
