@@ -110,28 +110,93 @@ export const projects: Project[] = [
     featured: true,
   },
   {
-    /* Hidden behind the konami / ABACABB codes and the agent's `revealSecret`.
-       It is real, in-progress work — the point of hiding it is that finding it
-       is a reward for poking around, not that it is unfinished. */
-    id: 'arg-idle',
-    name: 'Argentina Idle Manager',
-    secret: true,
+    id: 'ingobernable',
+    name: 'Ingobernable',
     tagline: {
-      en: 'A management roguelike about running Argentina. Deliberately unfair.',
-      es: 'Un roguelike de gestión sobre administrar Argentina. Deliberadamente injusto.',
+      en: 'A political satire management game about running Argentina — published, playable in the browser.',
+      es: 'Un juego de gestión y sátira política sobre gobernar Argentina — publicado y jugable en el navegador.',
     },
     description: {
-      en: 'An idle/management game where you run the country — or its provinces — against economic, social and political events, and try to last as long as you can before it collapses.',
-      es: 'Un juego idle/management donde administrás el país — o sus provincias — contra eventos económicos, sociales y políticos, tratando de durar lo máximo posible antes del colapso.',
+      en: 'You govern Argentina and try to survive your term: provinces, factions, the public, elections and events, all in retro pixel art. Black humour aimed at power, equally at every side.',
+      es: 'Gobernás Argentina e intentás aguantar el mandato: provincias, facciones, el pueblo, elecciones y eventos, todo en pixel art retro. Humor negro que apunta al poder, por igual a todos los espacios.',
     },
     detail: {
-      en: 'This is where the game development degree meets the day job. The simulation lives in a headless TypeScript core with Zod-validated state, kept entirely separate from the React UI — so the economy can be tested without rendering anything, and there is a test asserting the seeded RNG produces identical runs, which is what makes a balance change measurable instead of anecdotal. 33 tests currently pass. Systems are modelled as interacting loops rather than a list of numbers: education raises development, which slowly lowers corruption, which reduces dollar flight. The design philosophy is that the wrong move is always the tempting one — printing money and devaluing both work, right up until they do not.',
-      es: 'Acá es donde la tecnicatura en videojuegos se cruza con el trabajo. La simulación vive en un core headless de TypeScript con estado validado por Zod, completamente separado de la UI en React — así la economía se puede testear sin renderizar nada, y hay un test que verifica que el RNG con semilla produce corridas idénticas, que es lo que hace que un cambio de balance sea medible y no anecdótico. Hoy pasan 33 tests. Los sistemas están modelados como loops que interactúan, no como una lista de números: la educación sube el desarrollo, que baja lentamente la corrupción, que reduce la fuga de dólares. La filosofía de diseño es que lo incorrecto siempre es lo tentador — emitir y devaluar funcionan, hasta que dejan de funcionar.',
+      en: 'This is where the game development degree meets the day job. It started as a TypeScript/React prototype and I rebuilt it in Unity 6 and C#, with Windows and WebGL builds. The simulation is pure C#, deterministic and fully separate from the view: every random roll goes through a seeded RNG, it compiles and runs its 350+ tests outside the editor on .NET 10, and Unity imports it as a local package — which is what makes a balance change measurable instead of anecdotal. Content and balance are data-driven JSON catalogues, tuned over eight documented balance passes with simulated bot runs. The online leaderboard is a Cloudflare Worker with D1 and versioned migrations, and a scripted pipeline builds Windows and WebGL, runs a smoke test, deploys the site and verifies it. The pixel art for the title and posters is my own, drawn in Aseprite. Currently on version 1.3.',
+      es: 'Acá es donde la tecnicatura en videojuegos se cruza con el trabajo. Empezó como un prototipo en TypeScript/React y lo reconstruí en Unity 6 y C#, con builds para Windows y WebGL. La simulación es C# puro, determinista y totalmente separada de la vista: todo el azar pasa por un RNG con semilla, compila y corre sus más de 350 tests fuera del editor con .NET 10, y Unity la importa como paquete local — eso es lo que hace que un cambio de balance sea medible y no anecdótico. El contenido y el balance son catálogos JSON, ajustados en ocho pasadas de balance documentadas con partidas simuladas por bots. El leaderboard online es un Worker de Cloudflare con D1 y migraciones versionadas, y un pipeline con scripts compila Windows y WebGL, corre una prueba de humo, publica el sitio y lo verifica. El pixel art del título y los afiches es mío, dibujado en Aseprite. Hoy va por la versión 1.3.',
     },
-    domains: ['fullstack'],
-    stack: ['TypeScript', 'Zod', 'React', 'Zustand', 'Vitest', 'npm workspaces'],
+    domains: ['games'],
+    stack: ['Unity 6', 'C#', '.NET 10', 'WebGL', 'Cloudflare Workers', 'D1', 'Aseprite'],
+    status: 'production',
+    year: '2026',
+    href: 'https://ingobernable.aidev-gg.ar/',
+    featured: true,
+  },
+  {
+    id: 'bardoarcade',
+    name: 'BardoArcade',
+    tagline: {
+      en: 'A living-room game hub: the TV is the shared screen, up to eight phones are the controllers.',
+      es: 'Un hub de juegos para el living: el TV es la pantalla compartida y hasta ocho teléfonos son los controles.',
+    },
+    description: {
+      en: 'Six original party games — trivia, a band builder, blackjack, kart racing and more — plus an arcade corner. Players join by scanning a QR code; each phone is both a controller and a private screen.',
+      es: 'Seis juegos propios para jugar en grupo — trivia, armá tu banda, blackjack, carreras de karts y más — y un rincón de arcades. Se entra escaneando un QR; cada teléfono es control y pantalla privada a la vez.',
+    },
+    detail: {
+      en: 'The server is the authority: built on Node 22 and Colyseus, it validates every action and runs the rules and simulations, while phones send intentions rather than results and the TV only renders the state it receives — with separate public and private views, and token-based identity recovery so a full page reload does not drop a player. The monorepo keeps a shared protocol package validated with Zod and one package per game. Karts are drawn in Three.js with a four-way split screen and simulated server-side. The heavier arcade titles are emulated on the server itself and streamed to the TV at 58–60 fps. The same React app ships as two Android apps through Capacitor, one for Android TV and one for phones, with App Links so a room QR opens straight in the app. It runs on an Oracle Cloud ARM VM behind Cloudflare, over HTTPS and secure WebSockets, and is tested with node:test and Playwright on Chromium and WebKit.',
+      es: 'El servidor es la autoridad: hecho con Node 22 y Colyseus, valida cada acción y corre las reglas y simulaciones, mientras los teléfonos mandan intenciones y no resultados, y el TV solo dibuja el estado que recibe — con vistas públicas y privadas separadas, y recuperación de identidad por tokens para que recargar la página no saque a nadie de la partida. El monorepo tiene un paquete de protocolo compartido validado con Zod y un paquete por juego. Los karts se dibujan en Three.js con pantalla dividida en cuatro y se simulan en el servidor. Los arcades más pesados se emulan en el propio servidor y se transmiten al TV a 58–60 cuadros por segundo. La misma app React sale como dos apps Android con Capacitor, una para Android TV y otra para teléfonos, con App Links para que el QR de la sala abra directo en la app. Corre en una VM ARM de Oracle Cloud detrás de Cloudflare, con HTTPS y WebSockets seguros, y se prueba con node:test y Playwright en Chromium y WebKit.',
+    },
+    domains: ['fullstack', 'mobile', 'games'],
+    stack: ['TypeScript', 'React 19', 'Node.js', 'Colyseus', 'Three.js', 'Zod', 'Capacitor', 'Playwright', 'Oracle Cloud'],
     status: 'in-progress',
     year: '2026',
+    href: 'https://party.challengers.ar',
+    featured: false,
+  },
+  {
+    id: 'casa-13',
+    name: 'Casa 13',
+    tagline: {
+      en: 'An isometric action roguelike where your birth chart builds your character and the real sky changes each run.',
+      es: 'Un roguelike de acción isométrico donde tu carta astral arma el personaje y el cielo real cambia cada partida.',
+    },
+    description: {
+      en: 'Cross the twelve astrological houses to face Ophiuchus, the sign erased from the zodiac. Sun, Moon and Ascendant decide your stats, abilities and starting gear; today’s moon phase and retrogrades change today’s run.',
+      es: 'Atravesás las doce casas astrológicas para enfrentar a Ofiuco, el signo borrado del zodíaco. Sol, Luna y Ascendente definen stats, habilidades y equipo inicial; la fase lunar y los retrógrados de hoy cambian la partida de hoy.',
+    },
+    detail: {
+      en: 'Built in Godot 4.7 with GDScript, currently working towards a vertical slice: the first quadrant of houses plus the boss. Every character gets the same stat budget and each sign biases it through its own pool per position, so no chart is unfairly weak. Alongside the game I write my own tooling: a sprite forge, a layered character builder that also generates random enemies, and palette extraction from concept art. A headless smoke test walks every chart combination — 12³ of them — checking the stat budget, then plays a full run automatically through every room, ability and the boss.',
+      es: 'Hecho en Godot 4.7 con GDScript, hoy rumbo a una porción vertical: el primer cuadrante de casas más el jefe. Todos los personajes tienen el mismo presupuesto de stats y cada signo lo sesga con su propio pool por posición, así que ninguna carta sale injustamente débil. Junto al juego escribo mis propias herramientas: una forja de sprites, un armador de personajes por capas que también genera enemigos al azar y extracción de paleta desde el arte conceptual. Un smoke test headless recorre todas las combinaciones de carta — 12³ — verificando el presupuesto de stats, y después juega una partida completa sola, por todas las salas, habilidades y el jefe.',
+    },
+    domains: ['games'],
+    stack: ['Godot 4', 'GDScript'],
+    status: 'building',
+    year: '2026',
+    featured: false,
+  },
+  {
+    id: 'ticket-timer',
+    name: 'Ticket Timer',
+    tagline: {
+      en: 'Time tracking per ticket for a consulting team, with a management dashboard — built on my own initiative.',
+      es: 'Registro de horas por ticket para un equipo de consultoría, con dashboard de gestión — hecho por iniciativa propia.',
+    },
+    description: {
+      en: 'A timer the team uses to log hours against each ticket, and a dashboard where the project manager sees the whole team’s time. Works offline and syncs when it can.',
+      es: 'Un cronómetro con el que el equipo carga horas por ticket, y un dashboard donde el project manager ve el tiempo de todo el equipo. Funciona sin conexión y sincroniza cuando puede.',
+    },
+    detail: {
+      en: 'Three layers with clear roles: the browser’s local storage as an offline queue, a Cloudflare Worker with D1 as the source of truth the dashboard reads from, and a write-only backup to a synced folder inside the client’s tenant. The design is driven by data minimisation — the full record, free-text descriptions included, only goes to the tenant backup, while the Worker receives just the projection the dashboard needs, so client text never leaves the client’s environment. Access is split into two roles, team and manager, each with its own five-word passphrase that is easy to dictate over the phone. It runs on the free tier, with versioned SQL migrations and a manual for the team.',
+      es: 'Tres capas con roles claros: el almacenamiento local del navegador como cola offline, un Worker de Cloudflare con D1 como fuente de verdad de la que lee el dashboard, y un respaldo de solo escritura en una carpeta sincronizada dentro del tenant del cliente. El diseño parte de la minimización de datos — el registro completo, con las descripciones en texto libre, solo va al respaldo del tenant, mientras el Worker recibe únicamente la proyección que necesita el dashboard, así que el texto del cliente nunca sale de su entorno. El acceso se divide en dos roles, equipo y gestión, cada uno con su frase de cinco palabras, fácil de dictar por teléfono. Corre en la capa gratuita, con migraciones SQL versionadas y un manual para el equipo.',
+    },
+    domains: ['web'],
+    stack: ['JavaScript', 'Cloudflare Workers', 'D1', 'SQL'],
+    status: 'building',
+    year: '2026',
+    confidentialNote: {
+      en: 'Internal tool — no public link.',
+      es: 'Herramienta interna — sin enlace público.',
+    },
     featured: false,
   },
   {
@@ -159,9 +224,6 @@ export const projects: Project[] = [
 ]
 
 export const featuredProjects = projects.filter((p) => p.featured)
-
-/** Projects visible without unlocking anything. */
-export const publicProjects = projects.filter((p) => !p.secret)
 
 /** Every distinct stack entry, for the agent's filter vocabulary. */
 export const allStackTags = [...new Set(projects.flatMap((p) => p.stack))].sort()

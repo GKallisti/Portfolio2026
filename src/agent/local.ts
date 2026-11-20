@@ -50,6 +50,14 @@ const RULES: Rule[] = [
     },
   },
   {
+    patterns: [/\b(games?|juegos?|videojuegos?|gamedev|unity|godot)\b/],
+    action: { name: 'filterProjects', input: { domain: 'games', stack: [] } },
+    reply: {
+      en: 'Filtered to the games she has made and is making.',
+      es: 'Filtrado a los juegos que hizo y que está haciendo.',
+    },
+  },
+  {
     patterns: [/\b(all|every|todos?|todo)\b.*\b(projects?|proyectos?)\b/, /\b(clear|reset|limpiar|quitar)\b/],
     action: { name: 'clearFilters', input: {} },
     reply: { en: 'Cleared the filters.', es: 'Filtros limpiados.' },
@@ -138,19 +146,6 @@ const RULES: Rule[] = [
     patterns: [/\b(calm|calmer|quiet|off|tranquilo|apaga|sin efectos)\b/],
     action: { name: 'setEffects', input: { enabled: false } },
     reply: { en: 'Turned the retro effects off.', es: 'Apagué los efectos retro.' },
-  },
-  {
-    // Offline, the hint is all we can offer — the local router has no way to
-    // judge whether someone has "earned" it, so it points and steps back.
-    patterns: [
-      /\b(cheat|code|codigo|truco|trucos|secret|secreto|konami|abacabb)\b/,
-      /\b(hidden|oculto|escondido)\b/,
-    ],
-    action: null,
-    reply: {
-      en: 'Two of them work here. One is the code everybody tries on everything. The other is seven letters, and if you played Mortal Kombat on a Genesis you already know it. Type either one anywhere on the page.',
-      es: 'Acá funcionan dos. Uno es el código que todo el mundo prueba en todos lados. El otro son siete letras, y si jugaste Mortal Kombat en una Genesis ya lo sabés. Escribí cualquiera de los dos en cualquier parte de la página.',
-    },
   },
 ]
 

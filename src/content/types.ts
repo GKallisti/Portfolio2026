@@ -19,15 +19,18 @@ export type Localized<T = string> = Record<Language, T>
 export type MaybeLocalized = string | Localized
 
 /** Broad buckets used by the agent's `filterProjects` tool. */
-export const PROJECT_DOMAINS = ['ai', 'fullstack', 'mobile', 'web'] as const
+export const PROJECT_DOMAINS = ['ai', 'fullstack', 'mobile', 'web', 'games'] as const
 export type ProjectDomain = (typeof PROJECT_DOMAINS)[number]
 
 /**
  * `demonstrated` is deliberately distinct from `production`: work that was
  * built, finished and shown to clients, but not adopted. Calling that
  * "production" would be a claim she'd have to walk back in an interview.
+ *
+ * `building` is what she is working on right now; those projects are listed
+ * apart, under "Currently working on", instead of mixed in with shipped work.
  */
-export type ProjectStatus = 'production' | 'demonstrated' | 'in-progress' | 'archived'
+export type ProjectStatus = 'production' | 'demonstrated' | 'in-progress' | 'building' | 'archived'
 
 export interface Project {
   id: string
@@ -55,8 +58,6 @@ export interface Project {
   /** Shown in place of links when there is nothing public to point at. */
   confidentialNote?: Localized
   featured: boolean
-  /** Hidden until an easter egg unlocks it. Never listed by default. */
-  secret?: boolean
 }
 
 export interface ExperienceEntry {

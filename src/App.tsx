@@ -1,6 +1,5 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { UIProvider, useUIState } from '@/store/ui'
-import { useSecretCodes } from '@/hooks/useSecretCodes'
 import { useT } from '@/i18n'
 import { ui } from '@/content/ui'
 import { Nav } from '@/components/layout/Nav'
@@ -71,8 +70,7 @@ function useConsoleGreeting() {
       '%cYou opened the console. Good instinct.\n' +
         'The assistant on this page is real — it validates every action against a Zod\n' +
         'schema before touching the UI, and the same schema generates the function\n' +
-        'definitions the model sees. Source: github.com/GKallisti\n\n' +
-        'Two cheat codes unlock something. One you already know.',
+        'definitions the model sees. Source: github.com/GKallisti',
       muted,
     )
   }, [])
@@ -83,7 +81,6 @@ function Page() {
   const { page } = useUIState()
   useNavigationEffect()
   useDocumentTitle()
-  useSecretCodes()
   useConsoleGreeting()
 
   const DeepDive = page === 'home' ? null : DeepDivePages[page]

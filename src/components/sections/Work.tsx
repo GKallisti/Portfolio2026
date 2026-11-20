@@ -41,14 +41,7 @@ function ProjectCard({
       ].join(' ')}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-xl font-semibold">
-          {project.secret && (
-            <span className="text-pixel text-accent text-[9px]" aria-hidden="true">
-              ★
-            </span>
-          )}
-          {t(project.name)}
-        </h3>
+        <h3 className="text-xl font-semibold">{t(project.name)}</h3>
         <span className="text-muted font-mono text-xs">
           {t(ui.projects.status[project.status])} · {project.year}
         </span>
@@ -177,7 +170,6 @@ export function Work() {
 
   const visible = useMemo(() => {
     return projects.filter((project) => {
-      if (project.secret && !state.secretUnlocked) return false
       if (filter.domain && !project.domains.includes(filter.domain)) return false
       if (filter.stack.length > 0) {
         const stack = project.stack.map((s) => s.toLowerCase())
@@ -188,7 +180,11 @@ export function Work() {
       }
       return true
     })
-  }, [filter, state.secretUnlocked])
+  }, [filter])
+
+  // Work in progress is listed apart, so it never reads as shipped.
+  const shipped = visible.filter((project) => project.status !== 'building')
+  const current = visible.filter((project) => project.status === 'building')
 
   const isFiltered = filter.domain !== null || filter.stack.length > 0
 
@@ -218,15 +214,41 @@ export function Work() {
       {visible.length === 0 ? (
         <p className="text-muted">{t(ui.projects.noMatches)}</p>
       ) : (
-        <div className="grid gap-5">
-          {visible.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              highlighted={highlightedProject === project.id}
-            />
-          ))}
-        </div>
+        <>
+          {shipped.length > 0 && (
+            <div className="grid gap-5">
+              {shipped.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  highlighted={highlightedProject === project.id}
+                />
+              ))}
+            </div>
+          )}
+
+          {current.length > 0 && (
+            <>
+              <h3
+                className={[
+                  'text-muted mb-5 font-mono text-xs tracking-widest uppercase',
+                  shipped.length > 0 ? 'mt-12' : '',
+                ].join(' ')}
+              >
+                {t(ui.sections.currentTitle)}
+              </h3>
+              <div className="grid gap-5 md:grid-cols-2">
+                {current.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    highlighted={highlightedProject === project.id}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
     </Section>
   )

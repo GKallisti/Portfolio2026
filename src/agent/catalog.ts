@@ -117,12 +117,6 @@ export const actionCatalog = {
       enabled: z.boolean().describe('Whether the visual effects are on.'),
     }),
   },
-
-  revealSecret: {
-    summary:
-      "Unlock the hidden project. Call this when a visitor has actually worked out one of the cheat codes, or has asked persistently enough about hidden things that giving it to them is the fun answer. Do not volunteer it to someone who has not asked — the point is that it is found.",
-    schema: z.object({}),
-  },
 } as const
 
 export type ActionName = keyof typeof actionCatalog

@@ -39,9 +39,6 @@ export interface UIState {
    */
   page: PageId
   activeSection: SectionId
-  /** Whether the hidden project has been found. Not persisted — the fun is
-   *  in finding it again, and a stale unlock makes the site look ordinary. */
-  secretUnlocked: boolean
   /**
    * Bumped by `showCV`. A counter rather than a boolean so asking twice draws
    * attention twice — a flag would already be `true` the second time and the
@@ -125,18 +122,6 @@ export function applyAction(state: UIState, action: Action): UIState {
 
     case 'setEffects':
       return { ...state, effects: action.input.enabled }
-
-    case 'revealSecret':
-      // Also navigates, so the unlock is visible rather than silently
-      // changing a list the visitor is not currently looking at.
-      return {
-        ...state,
-        secretUnlocked: true,
-        highlightedProject: 'arg-idle',
-        page: 'home',
-        activeSection: 'work',
-        navigationNonce: state.navigationNonce + 1,
-      }
   }
 }
 
@@ -223,7 +208,6 @@ function initialState(): UIState {
     activeSection: 'home',
     cvNonce: 0,
     navigationNonce: 0,
-    secretUnlocked: false,
     ...readPreferences(),
   }
 }
